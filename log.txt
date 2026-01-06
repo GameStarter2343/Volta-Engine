@@ -1,0 +1,13 @@
+=== ENGINE STARTUP ===
+
+Render system initialized
+FPS: 345
+FPS: 848
+FPS: 847
+FPS: 847
+FPS: 842
+FPS: 843
+FPS: 838
+FPS: 831
+
+=== ENGINE SHUTDOWN ===
