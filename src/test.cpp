@@ -1,9 +1,9 @@
-#include "../headers/Render.h"
+#include "../headers/RenderOGL.h"
 #include "../headers/Camera.h"
 #include "../headers/Debug.h"
 
 int main() {
-    Debug d(true);
+    Debug d(1);
     Camera cam;
 
     Render r(&cam, &d, 1920, 1080, "external/shaders/test");

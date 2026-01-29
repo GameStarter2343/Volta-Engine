@@ -6,7 +6,7 @@
 #pragma once
 class Debug {
     public:
-    inline static bool isOn;
+    inline static int isOn;
     inline static std::fstream file;
 
     static void Log(int v) { if (isOn && file.is_open()) file << v << "\n"; }
@@ -23,9 +23,9 @@ class Debug {
         }
     }}
 
-    Debug(bool isOn) {
-        if (isOn) {
-            Debug::isOn = true;
+    Debug(int isOn) {
+        if (isOn > 0) {
+            Debug::isOn = isOn;
             file.open("log.txt", std::ios::out | std::ios::trunc);
             if (!file.is_open()) {
                 std::cout << "Failed to open log file!" << std::endl;

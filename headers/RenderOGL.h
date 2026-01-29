@@ -46,8 +46,9 @@ public:
 
     void ToggleBorderless();
 
+    static GLFWwindow* window;
+
 private:
-    GLFWwindow* window;
     int w, h;
     float aspect;
     bool VSync;
