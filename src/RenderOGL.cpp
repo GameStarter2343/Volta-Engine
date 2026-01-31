@@ -4,7 +4,7 @@
 #include "../headers/RenderOGL.h"
 #include "../external/glText/gltext.h"
 
-#include "C:/msys64/mingw64/include/SDL3/SDL.h"
+#include <SDL3/SDL.h>
 
 #include <fstream>
 #include <iostream>
