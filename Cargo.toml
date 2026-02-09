@@ -1,0 +1,9 @@
+[package]
+name = "Volta-Engine"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+volta-render = { path = "src/volta-render" }
+winit = "0.30"
+env_logger = "0.11"
