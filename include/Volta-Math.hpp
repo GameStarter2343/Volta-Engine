@@ -144,9 +144,7 @@ inline float Lerp(float a, float b, float t) { return a*(1-t)+b*t; }
         float AngleBetween(const Vec4& v) const { return acos(clamp(Dot(v) / (Length() * v.Length()), -1.0f, 1.0f)); }
 
         bool Equals(const Vec4& v, float epsilon = EPSILON) const {
-            return abs(x - v.x) < epsilon && abs(y - v.y) < epsilon &&
-                   abs(z - v.z) < epsilon && abs(w - v.w) < epsilon;
-        }
+            return abs(x - v.x) < epsilon && abs(y - v.y) < epsilon && abs(z - v.z) < epsilon && abs(w - v.w) < epsilon; }
 
         explicit Vec4(const Vec3& v, float _w = 1.0f) : x(v.x), y(v.y), z(v.z), w(_w) {}
         Vec3 ToVec3() const { return Vec3(x, y, z); } // Simple truncation
