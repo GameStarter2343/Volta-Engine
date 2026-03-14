@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 struct SDL_Window;
 
 #include "../external/glad/glad.h"
@@ -12,7 +13,11 @@ namespace Engine
 {
     class Render {
     public:
-        Render(const char* title, int w, int h, bool fullscreen, bool vsync);
+        int w;
+        int h;
+        float aspect;
+
+        Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderPath = "external/shaders/basic");
         ~Render();
 
         Render(const Render&) = delete;
@@ -20,18 +25,24 @@ namespace Engine
         Render(Render&&) = delete;
         Render& operator=(Render&&) = delete;
 
-        void Draw(const std::vector<VMath::Tri3>& tris); // Updated to const reference for performance
+        void Draw(const std::vector<VMath::Tri3>& tris);
 
         void Poll();
         void Swap();
         void SetClearColor(const VMath::Vec4& color);
-
+        void AttachShader(const std::string& shaderPath, GLenum type);
         bool IsRunning() const { return isRunning; }
         SDL_Window* GetWindow() const { return window; }
 
+        void SetUniform(const std::string& name, int x);
+        void SetUniform(const std::string& name, float x);
+        void SetUniform(const std::string& name, VMath::Vec2 x);
+        void SetUniform(const std::string& name, VMath::Vec3 x);
+        void SetUniform(const std::string& name, VMath::Vec4 x);
+        void SetUniform(const std::string& name, VMath::m4 x);
+
         bool fullscreen;
         bool vsync;
-
 
     private:
         bool isRunning;
@@ -39,16 +50,13 @@ namespace Engine
         SDL_GLContext glContext;
         VMath::Vec4 clearColor;
 
-        GLuint m_debugVAO;
-        GLuint m_debugVBO;
-        GLuint m_debugShaderProgram;
+        GLuint VAO;
+        GLuint VBO;
+        GLuint ShaderProgram;
 
-        int w;
-        int h;
-        float aspect;
-
-        void InitShaders();
+        void InitShaders(std::string shaderPath);
         void CleanupRenderer();
         GLuint CompileShader(const char* source, GLenum type);
+        GLuint LoadShaderProgram(const std::string& basePath);
     };
 } // namespace Engine

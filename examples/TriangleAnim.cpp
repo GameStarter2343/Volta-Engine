@@ -11,47 +11,46 @@ using namespace VMath;
 
 int main(int argc, char* argv[]) {
     Debug d(3);
-    Debug::Log("Starting Delaunay Animation", 1);
-    std::mt19937 rng(42); // Fixed seed for reproducibility
+    Debug::Log("Starting Triangles Animation", 1);
+    std::mt19937 rng(42);
     std::uniform_real_distribution<float> posDist(-1.2f, 1.2f);
     std::uniform_real_distribution<float> dirDist(-1.0f, 1.0f);
+    const int count = 300;
+    const float speed = 1.5f;
+    const float bound = 1.2f;
+    std::vector<Vec2> positions(count);
+    std::vector<Vec2> directions(count);
 
-    // Create 150 points and directions
-    std::vector<Vec2> positions(300);
-    std::vector<Vec2> directions(300);
-
-    for (int i = 0; i < 300; ++i) {
+    for (int i = 0; i < count; ++i) {
         positions[i] = Vec2(posDist(rng), posDist(rng));
         directions[i] = Vec2(dirDist(rng), dirDist(rng)).Normalized();
     }
 
-    Engine::Render render("Delaunay Animation", 1920, 1080, 1, 1);
+    Engine::Render r("Triangles Animation", 1920, 1080, true, true, "external/shaders/TriangleAnim");
 
-    // Visual setup
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glDisable(GL_CULL_FACE);  // Keep this for correct winding
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Triangulation throttling
     const int triangulateEveryNFrames = 1;
     int frameCounter = 0;
-    std::vector<Tri3> cachedTris;  // Reuse triangles when skipping triangulation
-
+    std::vector<Tri3> cachedTris;
+    r.SetUniform("mvp", VMath::m4::Identity());
+    r.SetUniform("minY", -1.0f);
+    r.SetUniform("maxY", 1.0f);
+    r.SetUniform("color1", {0.38f, 0.22f, 0.69f});
+    r.SetUniform("color2", {0.77f, 0.84f, 0.92f});
     Uint64 lastTime = SDL_GetTicks();
-    const float speed = 3.0f;  // You can increase speed now!
-    const float bound = 1.2f;
 
-    while (render.IsRunning()) {
+    while (r.IsRunning()) {
         Uint64 now = SDL_GetTicks();
         float deltaTime = static_cast<float>(now - lastTime);
         lastTime = now;
         frameCounter++;
 
-        render.Poll();
+        r.Poll();
 
-        // === ALWAYS UPDATE POSITIONS (smooth motion) ===
-        for (int i = 0; i < 300; ++i) {
+        for (int i = 0; i < count; ++i) {
             positions[i] += directions[i] * speed * deltaTime / 100000;
             if (positions[i].x > bound) positions[i].x = -bound;
             else if (positions[i].x < -bound) positions[i].x = bound;
@@ -59,10 +58,9 @@ int main(int argc, char* argv[]) {
             else if (positions[i].y < -bound) positions[i].y = bound;
         }
 
-        // === ONLY TRIANGULATE EVERY N FRAMES ===
         if (frameCounter % triangulateEveryNFrames == 0) {
             std::vector<double> points;
-            points.reserve(600);
+            points.reserve(count * 2);
             for (const auto& p : positions) {
                 points.push_back(static_cast<double>(p.x));
                 points.push_back(static_cast<double>(p.y));
@@ -78,7 +76,7 @@ int main(int argc, char* argv[]) {
                     size_t i1 = d.triangles[i+1];
                     size_t i2 = d.triangles[i+2];
 
-                    if (i0 >= 300 || i1 >= 300 || i2 >= 300) continue;
+                    if (i0 >= count || i1 >= count || i2 >= count) continue;
 
                     Vec3 a(positions[i0], 0.0f);
                     Vec3 b(positions[i1], 0.0f);
@@ -89,17 +87,15 @@ int main(int argc, char* argv[]) {
                 Debug::Log("Triangulation skipped", 3);
             }
 
-            // Atomically update cache (avoid tearing)
             if (!newTris.empty()) {
                 cachedTris = std::move(newTris);
             }
         }
 
-        // === RENDER CACHED TRIANGLES ===
         if (!cachedTris.empty()) {
-            render.Draw(cachedTris);
+            r.Draw(cachedTris);
         }
 
-        render.Swap();
+        r.Swap();
     }
 }

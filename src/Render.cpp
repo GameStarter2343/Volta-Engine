@@ -26,38 +26,46 @@ namespace Engine
         return shader;
     }
 
-    void Render::InitShaders() {
+    void Render::InitShaders(std::string shaderPath) {
         Debug::Log("Initializing Shaders", 3); Debug::LogSpace(3);
+        std::ifstream vertF(shaderPath + ".vert");
+        std::ifstream fragF(shaderPath + ".frag");
+        std::ifstream geomF(shaderPath + ".geom");
+        if (!vertF.is_open()) {
+            Debug::Log("ERROR: Failed to open vert shader: " + shaderPath + ".vert", 1);
+            return;
+        }
+        if (!fragF.is_open()) {
+            Debug::Log("ERROR: Failed to open frag shader: " + shaderPath + ".frag", 1);
+            return;
+        }
+        if (!geomF.is_open()) {
+            Debug::Log("ERROR: Failed to open geom shader: " + shaderPath + ".geom", 1);
+            return;
+        }
+        std::string vertSource((std::istreambuf_iterator<char>(vertF)), std::istreambuf_iterator<char>());
+        std::string fragSource((std::istreambuf_iterator<char>(fragF)), std::istreambuf_iterator<char>());
+        std::string geomSource((std::istreambuf_iterator<char>(geomF)), std::istreambuf_iterator<char>());
 
-        const char* vertSource = R"(
-            #version 450 core
-            layout (location = 0) in vec3 aPos;
-            void main() {
-                gl_Position = vec4(aPos, 1.0);
-            }
-        )";
+        vertF.close();
+        fragF.close();
+        geomF.close();
 
-        const char* fragSource = R"(
-            #version 450 core
-            out vec4 FragColor;
-            void main() {
-                FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-            }
-        )";
+        GLuint vertShader = CompileShader(vertSource.c_str(), GL_VERTEX_SHADER);
+        GLuint fragShader = CompileShader(fragSource.c_str(), GL_FRAGMENT_SHADER);
+        GLuint geomShader = CompileShader(geomSource.c_str(), GL_GEOMETRY_SHADER);
 
-        GLuint vertShader = CompileShader(vertSource, GL_VERTEX_SHADER);
-        GLuint fragShader = CompileShader(fragSource, GL_FRAGMENT_SHADER);
-
-        m_debugShaderProgram = glCreateProgram();
-        glAttachShader(m_debugShaderProgram, vertShader);
-        glAttachShader(m_debugShaderProgram, fragShader);
-        glLinkProgram(m_debugShaderProgram);
+        ShaderProgram = glCreateProgram();
+        glAttachShader(ShaderProgram, vertShader);
+        glAttachShader(ShaderProgram, fragShader);
+        glAttachShader(ShaderProgram, geomShader);
+        glLinkProgram(ShaderProgram);
 
         int success;
         char infoLog[512];
-        glGetProgramiv(m_debugShaderProgram, GL_LINK_STATUS, &success);
+        glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &success);
         if (!success) {
-            glGetProgramInfoLog(m_debugShaderProgram, 512, nullptr, infoLog);
+            glGetProgramInfoLog(ShaderProgram, 512, nullptr, infoLog);
             Debug::Log("FATAL: Shader Linking Failed: " + std::string(infoLog), 1); Debug::LogSpace(1);
             throw std::runtime_error(std::string("FATAL: Shader Linking Failed: ") + infoLog);
         }
@@ -65,11 +73,11 @@ namespace Engine
         glDeleteShader(vertShader);
         glDeleteShader(fragShader);
 
-        glGenVertexArrays(1, &m_debugVAO);
-        glGenBuffers(1, &m_debugVBO);
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
 
-        glBindVertexArray(m_debugVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_debugVBO);
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
@@ -82,15 +90,15 @@ namespace Engine
 
     void Render::CleanupRenderer() {
         Debug::Log("Cleanup Renderer", 2);
-        if (m_debugVAO) glDeleteVertexArrays(1, &m_debugVAO);
-        if (m_debugVBO) glDeleteBuffers(1, &m_debugVBO);
-        if (m_debugShaderProgram) glDeleteProgram(m_debugShaderProgram);
+        if (VAO) glDeleteVertexArrays(1, &VAO);
+        if (VBO) glDeleteBuffers(1, &VBO);
+        if (ShaderProgram) glDeleteProgram(ShaderProgram);
     }
 
-    Render::Render(const char* title, int w, int h, bool fullscreen, bool vsync)
+    Render::Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderPath)
         : window(nullptr), isRunning(true), glContext(nullptr)
         , clearColor(0.1f, 0.1f, 0.17f, 1.0f), w(w), h(h), aspect(float(w)/float(h))
-        , m_debugVAO(0), m_debugVBO(0), m_debugShaderProgram(0)
+        , VAO(0), VBO(0), ShaderProgram(0)
     {
 
         if (SDL_Init(SDL_INIT_VIDEO) == false) {
@@ -109,20 +117,20 @@ namespace Engine
 
         window = SDL_CreateWindow(title, w, h, flags);
         if (!window) {
-            Debug::Log(1, 1);
-            throw std::runtime_error(SDL_GetError());
+            Debug::Log("FATAL: " + std::string(SDL_GetError()), 1);
+            throw std::runtime_error("FATAL: " + std::string(SDL_GetError()));
         }
 
         if (vsync) SDL_GL_SetSwapInterval(1);
 
         glContext = SDL_GL_CreateContext(window);
         if (!glContext) {
-            Debug::Log(-1, 1);
-            throw std::runtime_error(SDL_GetError());
+            Debug::Log("FATAL: " + std::string(SDL_GetError()), 1);
+            throw std::runtime_error("FATAL: " + std::string(SDL_GetError()));
         }
 
         if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-            Debug::Log(1, 1);
+            Debug::Log("FATAL: Failed to initialize GLAD", 1);
             throw std::runtime_error("FATAL: Failed to initialize GLAD"); Debug::LogSpace(1);
         }
 
@@ -130,7 +138,7 @@ namespace Engine
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
 
-        InitShaders();
+        InitShaders(shaderPath);
         Debug::Log("Successfully Initialized Renderer", 1);
         Debug::Log("Width: " + std::to_string(w) + ", Height: " + std::to_string(h), 2); Debug::LogSpace(2);
         Debug::Log("fullscreen: " + std::to_string(fullscreen ? 1 : 0), 2); Debug::LogSpace(2);
@@ -140,12 +148,10 @@ namespace Engine
     void Render::Draw(const std::vector<VMath::Tri3>& tris) {
         if (tris.empty()) return;
 
-        Debug::Log(static_cast<int>(tris.size()), 3);
+        glUseProgram(ShaderProgram);
+        glBindVertexArray(VAO);
 
-        glUseProgram(m_debugShaderProgram);
-        glBindVertexArray(m_debugVAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, m_debugVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, tris.size() * sizeof(VMath::Tri3), tris.data(), GL_DYNAMIC_DRAW);
 
         glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(tris.size() * 3));
@@ -180,6 +186,44 @@ namespace Engine
         if (window) { SDL_DestroyWindow(window); window = nullptr; }
         Debug::Log("Render Destructed", 2); Debug::LogSpace(2);
     }
+    void Render::AttachShader(const std::string& shaderPath, GLenum type) {
+        std::ifstream file(shaderPath);
+        if (!file.is_open()) {
+            Debug::Log("ERROR: Failed to open shader file: " + shaderPath, 1);
+            return;
+        }
+        std::string source((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
+        GLuint shader = CompileShader(source.c_str(), type);
+        glAttachShader(ShaderProgram, shader);
+        glLinkProgram(ShaderProgram);
+        glDeleteShader(shader);
+    }
+
+    void Render::SetUniform(const std::string& name, int x) {
+        glUseProgram(ShaderProgram);
+        GLint loc = glGetUniformLocation(ShaderProgram, name.c_str());
+        if (loc != -1) glUniform1i(loc, x); }
+    void Render::SetUniform(const std::string& name, float x) {
+        glUseProgram(ShaderProgram);
+        GLint loc = glGetUniformLocation(ShaderProgram, name.c_str());
+        if (loc != -1) glUniform1f(loc, x); }
+    void Render::SetUniform(const std::string& name, VMath::Vec2 x) {
+        glUseProgram(ShaderProgram);
+        GLint loc = glGetUniformLocation(ShaderProgram, name.c_str());
+        if (loc != -1) glUniform2f(loc, x.x, x.y); }
+    void Render::SetUniform(const std::string& name, VMath::Vec3 x) {
+        glUseProgram(ShaderProgram);
+        GLint loc = glGetUniformLocation(ShaderProgram, name.c_str());
+        if (loc != -1) glUniform3f(loc, x.x, x.y, x.z); }
+    void Render::SetUniform(const std::string& name, VMath::Vec4 x) {
+        glUseProgram(ShaderProgram);
+        GLint loc = glGetUniformLocation(ShaderProgram, name.c_str());
+        if (loc != -1) glUniform4f(loc, x.x, x.y, x.z, x.w); }
+    void Render::SetUniform(const std::string& name, VMath::m4 x) {
+        glUseProgram(ShaderProgram);
+        GLint loc = glGetUniformLocation(ShaderProgram, name.c_str());
+        if (loc != -1) glUniformMatrix4fv(loc, 1, GL_FALSE, x.data()); }
 
     void Render::Swap() { if (!window) return; SDL_GL_SwapWindow(window); }
     void Render::SetClearColor(const VMath::Vec4& color) { clearColor = color; }
