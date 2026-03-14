@@ -2010,4 +2010,3 @@ int gladLoadGLLoader(GLADloadproc load) {
 	load_GL_KHR_parallel_shader_compile(load);
 	return GLVersion.major != 0 || GLVersion.minor != 0;
 }
-

@@ -1,22 +1,23 @@
-#include <cmath>
 #pragma once
+
+#include <cmath>
 
 namespace VMath {
 //Constants
-inline constexpr float PI      = 3.1415926535f;
-inline constexpr float TWO_PI  = 6.2831853071f;
-inline constexpr float HALF_PI = 1.5707963267f;
-inline constexpr float INV_PI  = 0.3183098861f;
-inline constexpr float DEG2RAD = PI / 180.0f;
-inline constexpr float RAD2DEG = 180.0f / PI;
-inline constexpr float EPSILON = 0.000001f;
-inline constexpr float DtoR(float D) { return D * DEG2RAD; }
-inline constexpr float RtoD(float R) { return R * RAD2DEG; }
+    inline constexpr float PI      = 3.1415926535f;
+    inline constexpr float TWO_PI  = 6.2831853071f;
+    inline constexpr float HALF_PI = 1.5707963267f;
+    inline constexpr float INV_PI  = 0.3183098861f;
+    inline constexpr float DEG2RAD = PI / 180.0f;
+    inline constexpr float RAD2DEG = 180.0f / PI;
+    inline constexpr float EPSILON = 0.000001f;
+    inline constexpr float DtoR(float D) { return D * DEG2RAD; }
+    inline constexpr float RtoD(float R) { return R * RAD2DEG; }
 //Functions
-inline float clamp(float value, float min, float max) { return fmax(min, fmin(value, max)); }
-inline bool IsZero(float a) { return std::abs(a) < EPSILON; }
-inline bool IsEqual(float a, float b) { return std::abs(a - b) < EPSILON; }
-inline float Lerp(float a, float b, float t) { return a*(1-t)+b*t; }
+    inline float clamp(float value, float min, float max) { return fmax(min, fmin(value, max)); }
+    inline bool IsZero(float a) { return std::abs(a) < EPSILON; }
+    inline bool IsEqual(float a, float b) { return std::abs(a - b) < EPSILON; }
+    inline float Lerp(float a, float b, float t) { return a*(1-t)+b*t; }
 //Two float
     class Vec2 {
         public:
@@ -77,8 +78,8 @@ inline float Lerp(float a, float b, float t) { return a*(1-t)+b*t; }
         void operator*= (const Vec3& v) {x *= v.x; y *= v.y; z *= v.z;}
         void operator/= (const Vec3& v) {x /= v.x; y /= v.y; z /= v.z;}
 
-        bool operator== (const Vec3& v) const { return x == v.x && y == v.y && z == v.z; }
-        bool operator!= (const Vec3& v) const { return !(*this == v); }
+        bool operator== (const Vec3& v) const { return Equals(v); }
+        bool operator!= (const Vec3& v) const { return !Equals(v); }
         Vec3 operator-() const { return Vec3(-x, -y, -z); }
 
         float LengthSq() const { return x*x + y*y + z*z; }
@@ -97,7 +98,7 @@ inline float Lerp(float a, float b, float t) { return a*(1-t)+b*t; }
         Vec3 ProjectOn(const Vec3& v) const { return v * (Dot(v) / v.LengthSq()); }
         float AngleBetween(const Vec3& v) const { return acos(clamp(Dot(v) / (Length() * v.Length()), -1.0f, 1.0f)); }
 
-        bool Equals(const Vec3& v, float epsilon = EPSILON) const { return abs(x - v.x) < epsilon && abs(y - v.y) < epsilon && abs(z - v.z) < epsilon; }
+        bool Equals(const Vec3& v, float epsilon = EPSILON) const { return std::abs(x - v.x) < epsilon && std::abs(y - v.y) < epsilon && std::abs(z - v.z) < epsilon; }
         explicit Vec3(const Vec2& v, float _z = 0.0f) : x(v.x), y(v.y), z(_z) {}
     };
     inline Vec3 operator*(float a, const Vec3& v) { return v * a; }
@@ -151,7 +152,25 @@ inline float Lerp(float a, float b, float t) { return a*(1-t)+b*t; }
         Vec3 ToVec3Perspective() const { return (w != 0.0f) ? Vec3(x/w, y/w, z/w) : Vec3(x, y, z); }
     };
     inline Vec4 operator*(float a, const Vec4& v) { return v * a; }
-//Four float
+//Two float Triangle
+    class Tri2 {
+        public:
+        Vec2 a, b, c;
+        Tri2(const Vec2& _a, const Vec2& _b, const Vec2& _c) : a(_a), b(_b), c(_c) {}
+    };
+//Three float Triangle
+    class Tri3 {
+        public:
+        Vec3 a, b, c;
+        Tri3(const Vec3& _a, const Vec3& _b, const Vec3& _c) : a(_a), b(_b), c(_c) {}
+    };
+//Four float Triangle
+    class Tri4 {
+        public:
+        Vec4 a, b, c;
+        Tri4(const Vec4& _a, const Vec4& _b, const Vec4& _c) : a(_a), b(_b), c(_c) {}
+    };
+//Four float But Cool
     class Quaternion {
         public:
         float w, x, y, z;
