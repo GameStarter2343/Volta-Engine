@@ -377,4 +377,8 @@ namespace VMath {
             return result; }
         const float* data() const noexcept { return &m[0][0]; }
     };
-}
+
+//More Functions
+    inline Vec3 rgb(int a, int b, int c) { return Vec3(a / 255.0f, b / 255.0f, c / 255.0f); }
+    inline Vec4 rgba(int a, int b, int c, int d) { return Vec4(a / 255.0f, b / 255.0f, c / 255.0f, d / 255.0f); }
+} //namespace VMath

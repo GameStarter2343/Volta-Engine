@@ -27,10 +27,9 @@ public:
         }
     }
 
-    static void LogSpace(uint8_t l) { file << std::endl; }
-    static void Log(int v, uint8_t l) { if (isOn >= l && file.is_open()) file << v; }
-    static void Log(float v, uint8_t l) { if (isOn >= l && file.is_open()) file << v; }
-    static void Log(const std::string& s, uint8_t l) { if (isOn >= l && file.is_open()) file << s; }
-    static void Log(const VMath::Vec3& v, uint8_t l) { if (isOn >= l && file.is_open()) file << v.x << ", " << v.y << ", " << v.z; }
-    static void Log(const VMath::Quaternion& v, uint8_t l) { if (isOn >= l && file.is_open()) file << v.x << ", " << v.y << ", " << v.z << ", " << v.w; }
+    static void Log(int v, uint8_t l) { if (isOn >= l && file.is_open()) file << v << std::endl; }
+    static void Log(float v, uint8_t l) { if (isOn >= l && file.is_open()) file << v << std::endl; }
+    static void Log(const std::string& s, uint8_t l) { if (isOn >= l && file.is_open()) file << s << std::endl; }
+    static void Log(const VMath::Vec3& v, uint8_t l) { if (isOn >= l && file.is_open()) file << v.x << ", " << v.y << ", " << v.z << std::endl; }
+    static void Log(const VMath::Quaternion& v, uint8_t l) { if (isOn >= l && file.is_open()) file << v.x << ", " << v.y << ", " << v.z << ", " << v.w << std::endl; }
 };

@@ -1,13 +1,12 @@
 #pragma once
 
-#include <string>
-struct SDL_Window;
-
 #include "../external/glad/glad.h"
 #include <SDL3/SDL.h>
-#include <vector>
-
 #include "VMath.hpp"
+
+#include <unordered_map>
+#include <string>
+#include <vector>
 
 namespace Engine
 {
@@ -30,9 +29,12 @@ namespace Engine
         void Poll();
         void Swap();
         void SetClearColor(const VMath::Vec4& color);
-        void AttachShader(const std::string& shaderPath, GLenum type);
         bool IsRunning() const { return isRunning; }
         SDL_Window* GetWindow() const { return window; }
+
+        void AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type);
+        void SetProgram(const std::string& programName);
+        void CreateProgram(const std::string& programName);
 
         void SetUniform(const std::string& name, int x);
         void SetUniform(const std::string& name, float x);
@@ -52,10 +54,11 @@ namespace Engine
 
         GLuint VAO;
         GLuint VBO;
-        GLuint ShaderProgram;
+        GLint currentProgram;
+        std::unordered_map<std::string, GLuint> ShaderPrograms;
 
         void InitShaders(std::string shaderPath);
-        void CleanupRenderer();
+        void InitRender(std::string title, bool fullscreen, bool vsync);
         GLuint CompileShader(const char* source, GLenum type);
         GLuint LoadShaderProgram(const std::string& basePath);
     };
