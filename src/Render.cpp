@@ -3,7 +3,6 @@
 #include "../external/glad/glad.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_video.h>
-#include <cstddef>
 #include <string>
 #include <fstream>
 #include <vector>
@@ -76,21 +75,21 @@ namespace Engine
         Debug::Log("vsync: " + std::to_string(vsync ? true : false), 2);
     }
 
-    Render::Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, std::array<bool, 6>> shaders)
+    Render::Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, uint8_t> shaders)
         : window(nullptr), isRunning(true), glContext(nullptr)
         , clearColor(0.1f, 0.1f, 0.17f, 1.0f), w(w), h(h), aspect(float(w)/float(h))
         , fullscreen(fullscreen), vsync(vsync), VAO(0), VBO(0), currentProgram(0)
     {
         InitRender(title, fullscreen, vsync);
-        for (const auto& [name, shader] : shaders) {
-            SetProgram(name, 1);
+        for (const auto& [name, mask] : shaders) {
+            SetProgram(name, true);
 
-            if (shader[0]) AttachShader(name, "external/shaders/" + name + ".vert", GL_VERTEX_SHADER);
-            if (shader[1]) AttachShader(name, "external/shaders/" + name + ".frag", GL_FRAGMENT_SHADER);
-            if (shader[2]) AttachShader(name, "external/shaders/" + name + ".geom", GL_GEOMETRY_SHADER);
-            if (shader[3]) AttachShader(name, "external/shaders/" + name + ".comp", GL_COMPUTE_SHADER);
-            if (shader[4]) AttachShader(name, "external/shaders/" + name + ".tesc", GL_TESS_CONTROL_SHADER);
-            if (shader[5]) AttachShader(name, "external/shaders/" + name + ".tese", GL_TESS_EVALUATION_SHADER);
+            if (mask & Vertex) AttachShader(name, "external/shaders/" + name + ".vert", GL_VERTEX_SHADER);
+            if (mask & Fragment) AttachShader(name, "external/shaders/" + name + ".frag", GL_FRAGMENT_SHADER);
+            if (mask & Geometry) AttachShader(name, "external/shaders/" + name + ".geom", GL_GEOMETRY_SHADER);
+            if (mask & Compute) AttachShader(name, "external/shaders/" + name + ".comp", GL_COMPUTE_SHADER);
+            if (mask & TessControl) AttachShader(name, "external/shaders/" + name + ".tesc", GL_TESS_CONTROL_SHADER);
+            if (mask & TessEval) AttachShader(name, "external/shaders/" + name + ".tese", GL_TESS_EVALUATION_SHADER);
 
             glLinkProgram(ShaderPrograms[name]);
         }

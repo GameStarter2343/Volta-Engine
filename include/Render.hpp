@@ -7,7 +7,15 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
-#include <array>
+
+enum ShaderStage {
+    Vertex       = 1 << 0,
+    Fragment     = 1 << 1,
+    Geometry     = 1 << 2,
+    TessControl  = 1 << 3,
+    TessEval     = 1 << 4,
+    Compute      = 1 << 5
+};
 
 namespace Engine
 {
@@ -18,7 +26,7 @@ namespace Engine
         float aspect;
 
         Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderPath = "external/shaders/basic");
-        Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, std::array<bool, 6>> shaders);
+        Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, uint8_t> shaders);
         ~Render();
 
         Render(const Render&) = delete;

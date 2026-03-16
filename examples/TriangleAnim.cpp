@@ -6,11 +6,11 @@
 #include <vector>
 #include <random>
 #include <chrono>
-
+using Stage = Engine::Render;
 struct Palette {
-    Vec3 color1;
-    Vec3 color2;
-    Vec3 color3;
+    VMath::Vec3 color1;
+    VMath::Vec3 color2;
+    VMath::Vec3 color3;
 
     float maxY;
     float midY;
@@ -18,45 +18,61 @@ struct Palette {
 };
 
 const Palette Fire = {
-    rgb(255, 255, 133), //Color1, the one at the top
-    rgb(255, 175, 46),  //Color2, this one in the middle
-    rgb(122, 46, 6),    //Color3, and this one at the bottom
+    VMath::rgb(255, 255, 133), //Color1, the one at the top
+    VMath::rgb(255, 175, 46),  //Color2, this one in the middle
+    VMath::rgb(122, 46, 6),    //Color3, and this one at the bottom
     0.99f,   //maxY
     0.0f,    //midY
     -0.99f   //minY
 };
 const Palette Water = {
-    rgb(133, 255, 255),
-    rgb(52, 167, 255),
-    rgb(0, 63, 141),
+    VMath::rgb(133, 255, 255),
+    VMath::rgb(52, 167, 255),
+    VMath::rgb(0, 63, 141),
     0.99f,
     0.0f,
     -0.99f
 };
 const Palette Earth = {
-    rgb(8, 113, 86),
-    rgb(57, 169, 91),
-    rgb(116, 241, 94),
+    VMath::rgb(8, 113, 86),
+    VMath::rgb(57, 169, 91),
+    VMath::rgb(116, 241, 94),
+    0.99f,
+    0.0f,
+    -0.99f
+};
+const Palette Air = {
+    VMath::rgb(52, 52, 52),
+    VMath::rgb(121, 121, 121),
+    VMath::rgb(225, 225, 225),
+    0.99f,
+    0.0f,
+    -0.99f
+};
+const Palette Space = {
+    VMath::rgb(96, 53, 172),
+    VMath::rgb(143, 145, 220),
+    VMath::rgb(200, 216, 235),
     0.99f,
     0.0f,
     -0.99f
 };
 
-int main(int argc, char* argv[]) {
+int main() {
     // You can configure data here :)
-    const int count = 150;
-    const float speed = 1.5f;
-    const float bound = 1.5f;
-    const Palette& chosenPalette = Earth;
+    const int count = 200; // Vertices count
+    const float speed = 1.5f; // Vertices move
+    const float bound = 1.2f; // Box size, make it more than 1 to prevent artifacts from appearing
+    const Palette& chosenPalette = Water;
 
     Debug d(3);
     Debug::Log("Starting Triangles Animation", 1);
     Engine::Render r("Triangles Animation", 1920, 1080, true, true, {
-        {"Triangle", {true, true, true, false, false, false}},
-        {"Dots", {true, true, false, false, false, false}}
+        {"Triangle", Vertex | Fragment | Geometry},
+        {"Dots", Vertex | Fragment}
     });
     std::mt19937 rng(std::chrono::system_clock::now().time_since_epoch().count());
-    std::uniform_real_distribution<float> posDist(-1.2f, 1.2f);
+    std::uniform_real_distribution<float> posDist(-bound, bound);
     std::uniform_real_distribution<float> dirDist(-1.0f, 1.0f);
     std::vector<VMath::Vec2> directions(count);
     std::vector<VMath::Vec2> positions(count + 4);
