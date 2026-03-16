@@ -42,8 +42,6 @@ namespace VMath {
         bool operator== (const Vec2& v) const { return Equals(v); }
         bool operator!= (const Vec2& v) const { return !(*this == v); }
         Vec2 operator-() const { return Vec2(-x, -y); }
-        float operator[] (int i) const { return (&x)[i]; }
-        float& operator[] (int i) { return (&x)[i]; }
 
         float Length() const { return sqrt(x*x + y*y); }
         float Normalize() { float l = Length(); if (l > EPSILON) { x /= l; y /= l; } return l; }
@@ -126,8 +124,6 @@ namespace VMath {
         bool operator== (const Vec4& v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
         bool operator!= (const Vec4& v) const { return !(*this == v); }
         Vec4 operator-() const { return Vec4(-x, -y, -z, -w); }
-        float operator[] (int i) const { return (&x)[i]; }
-        float& operator[] (int i) { return (&x)[i]; }
 
         float LengthSq() const { return x*x + y*y + z*z + w*w; }
         float Length() const { return sqrt(LengthSq()); }

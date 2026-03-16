@@ -26,12 +26,12 @@ const Palette Fire = {
     -0.99f   //minY
 };
 const Palette Water = {
-    VMath::rgb(133, 255, 255),
-    VMath::rgb(52, 167, 255),
-    VMath::rgb(0, 63, 141),
+    VMath::rgb(123, 235, 255),
+    VMath::rgb(32, 147, 255),
+    VMath::rgb(0, 43, 121),
     0.99f,
     0.0f,
-    -0.99f
+    -0.95f
 };
 const Palette Earth = {
     VMath::rgb(8, 113, 86),
@@ -60,7 +60,7 @@ const Palette Space = {
 
 int main() {
     // You can configure data here :)
-    const int count = 200; // Vertices count
+    const int count = 150; // Vertices count
     const float speed = 1.5f; // Vertices move
     const float bound = 1.2f; // Box size, make it more than 1 to prevent artifacts from appearing
     const Palette& chosenPalette = Water;
@@ -73,7 +73,7 @@ int main() {
     });
     std::mt19937 rng(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<float> posDist(-bound, bound);
-    std::uniform_real_distribution<float> dirDist(-1.0f, 1.0f);
+    std::uniform_real_distribution<float> dirDist(0.0f, 1.0f);
     std::vector<VMath::Vec2> directions(count);
     std::vector<VMath::Vec2> positions(count + 4);
 
@@ -82,9 +82,9 @@ int main() {
     positions[2] = VMath::Vec2(bound, bound);
     positions[3] = VMath::Vec2(-bound, bound);
 
-    for (int i = 4; i < count; ++i) {
+    for (int i = 4; i < count + 4; ++i) {
         positions[i] = VMath::Vec2(posDist(rng), posDist(rng));
-        directions[i] = VMath::Vec2(dirDist(rng), dirDist(rng)).Normalized();
+        directions[i - 4] = VMath::Vec2(dirDist(rng)*2 - 1, dirDist(rng)*2 - 1).Normalized();
     }
 
 
@@ -98,15 +98,11 @@ int main() {
     Uint64 lastTime = SDL_GetTicks();
     Debug::Log("Entering main loop", 1);
     while (r.IsRunning()) {
-        Uint64 now = SDL_GetTicks();
-        float deltaTime = static_cast<float>(now - lastTime);
-        lastTime = now;
-        frameCounter++;
-
+        r.Update();
         r.Poll();
 
         for (int i = 4; i < count; ++i) {
-            positions[i] += directions[i] * speed * deltaTime / 100000;
+            positions[i] += directions[i - 4] / 100 * speed * r.deltaTime;
             if (positions[i].x > bound) positions[i].x = -bound;
             else if (positions[i].x < -bound) positions[i].x = bound;
             if (positions[i].y > bound) positions[i].y = -bound;
@@ -157,8 +153,8 @@ int main() {
             r.Draw(cachedTris);
             r.SetProgram("Dots");
             r.SetUniform("mvp", VMath::m4::Identity());
-            r.SetUniform("pointSizeMin", 4.0f);
-            r.SetUniform("pointSizeMax", 12.0f);
+            r.SetUniform("pointSizeMin", 3.0f);
+            r.SetUniform("pointSizeMax", 8.0f);
             r.DrawPoints(positions);
         }
 

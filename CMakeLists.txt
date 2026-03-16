@@ -11,5 +11,17 @@ add_executable(app ${SOURCES})
 
 target_include_directories(app PRIVATE external)
 
-find_package(SDL3 REQUIRED)
+find_package(SDL3 QUIET)
+
+if(NOT SDL3_FOUND)
+    include(FetchContent)
+
+    FetchContent_Declare(
+        SDL3
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG main
+    )
+
+    FetchContent_MakeAvailable(SDL3)
+endif()
 target_link_libraries(app PRIVATE SDL3::SDL3)

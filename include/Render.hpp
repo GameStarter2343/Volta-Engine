@@ -25,6 +25,8 @@ namespace Engine
         int h;
         float aspect;
 
+        float deltaTime;
+
         Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderPath = "external/shaders/basic");
         Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, uint8_t> shaders);
         ~Render();
@@ -39,16 +41,16 @@ namespace Engine
 
         void Poll();
         void Swap();
+        void Update();
         void SetClearColor(const VMath::Vec4& color);
         bool IsRunning() const { return isRunning; }
         SDL_Window* GetWindow() const { return window; }
 
-        void AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type, bool Link = false);
+        void AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type);
         void SetProgram(const std::string& programName, bool Force = false);
         void SetProgram(GLuint program);
 
         GLuint GetCurrentProgram() const { return currentProgram; }
-
 
         void SetUniform(const std::string& name, int x);
         void SetUniform(const std::string& name, float x);
@@ -65,16 +67,16 @@ namespace Engine
         SDL_Window* window;
         SDL_GLContext glContext;
         VMath::Vec4 clearColor;
-
+        Uint32 lastFrameTime = 0;
         GLuint VAO;
         GLuint VBO;
         GLuint currentProgram;
         std::unordered_map<std::string, GLuint> ShaderPrograms;
         std::unordered_map<std::string, GLint> uniformCache;
+        float fpsTimer;
+        int frameCount;
 
-        void InitShaders(std::string shaderPath);
         void InitRender(std::string title, bool fullscreen, bool vsync);
         GLuint CompileShader(const char* source, GLenum type);
-        GLuint LoadShaderProgram(const std::string& basePath);
     };
 } // namespace Engine
