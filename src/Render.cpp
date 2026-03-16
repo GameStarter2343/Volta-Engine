@@ -3,14 +3,17 @@
 #include "../external/glad/glad.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_video.h>
+#include <cstddef>
 #include <string>
+#include <fstream>
 #include <vector>
 #include <stdexcept>
 
 namespace Engine
 {
+    static std::string programUniformKey(GLuint program, const std::string& name) { return std::to_string(program) + ":" + name; }
     void Render::InitRender(std::string title, bool fullscreen, bool vsync) {
-        if (SDL_Init(SDL_INIT_VIDEO) == false) {
+        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             Debug::Log("FATAL: Failed to initialize SDL", 1);
             throw std::runtime_error(SDL_GetError());
         }
@@ -29,13 +32,13 @@ namespace Engine
             Debug::Log("FATAL: " + std::string(SDL_GetError()), 1);
             throw std::runtime_error("FATAL: " + std::string(SDL_GetError()));
         }
-        if (vsync) SDL_GL_SetSwapInterval(1);
 
         glContext = SDL_GL_CreateContext(window);
         if (!glContext) {
             Debug::Log("FATAL: " + std::string(SDL_GetError()), 1);
             throw std::runtime_error("FATAL: " + std::string(SDL_GetError()));
         }
+        if (vsync) SDL_GL_SetSwapInterval(1);
 
         if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
             Debug::Log("FATAL: Failed to initialize GLAD", 1);
@@ -45,21 +48,54 @@ namespace Engine
         glViewport(0, 0, w, h);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VMath::Vec3), reinterpret_cast<void*>(0));
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
+
     Render::Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderName)
         : window(nullptr), isRunning(true), glContext(nullptr)
         , clearColor(0.1f, 0.1f, 0.17f, 1.0f), w(w), h(h), aspect(float(w)/float(h))
-        , VAO(0), VBO(0)
+        , fullscreen(fullscreen), vsync(vsync), VAO(0), VBO(0), currentProgram(0)
     {
         InitRender(title, fullscreen, vsync);
-        CreateProgram("basic");
+        SetProgram("basic", true);
         AttachShader("basic", shaderName + ".vert", GL_VERTEX_SHADER);
         AttachShader("basic", shaderName + ".frag", GL_FRAGMENT_SHADER);
-        AttachShader("basic", shaderName + ".geom", GL_GEOMETRY_SHADER);
+        AttachShader("basic", shaderName + ".geom", GL_GEOMETRY_SHADER, 1);
+        SetProgram("basic");
         Debug::Log("Successfully Initialized Renderer", 1);
         Debug::Log("Width: " + std::to_string(w) + ", Height: " + std::to_string(h), 2);
-        Debug::Log("fullscreen: " + std::to_string(fullscreen ? 1 : 0), 2);
-        Debug::Log("vsync: " + std::to_string(vsync ? 1 : 0), 2);
+        Debug::Log("fullscreen: " + std::to_string(fullscreen ? true : false), 2);
+        Debug::Log("vsync: " + std::to_string(vsync ? true : false), 2);
+    }
+
+    Render::Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, std::array<bool, 6>> shaders)
+        : window(nullptr), isRunning(true), glContext(nullptr)
+        , clearColor(0.1f, 0.1f, 0.17f, 1.0f), w(w), h(h), aspect(float(w)/float(h))
+        , fullscreen(fullscreen), vsync(vsync), VAO(0), VBO(0), currentProgram(0)
+    {
+        InitRender(title, fullscreen, vsync);
+        for (const auto& [name, shader] : shaders) {
+            SetProgram(name, 1);
+
+            if (shader[0]) AttachShader(name, "external/shaders/" + name + ".vert", GL_VERTEX_SHADER);
+            if (shader[1]) AttachShader(name, "external/shaders/" + name + ".frag", GL_FRAGMENT_SHADER);
+            if (shader[2]) AttachShader(name, "external/shaders/" + name + ".geom", GL_GEOMETRY_SHADER);
+            if (shader[3]) AttachShader(name, "external/shaders/" + name + ".comp", GL_COMPUTE_SHADER);
+            if (shader[4]) AttachShader(name, "external/shaders/" + name + ".tesc", GL_TESS_CONTROL_SHADER);
+            if (shader[5]) AttachShader(name, "external/shaders/" + name + ".tese", GL_TESS_EVALUATION_SHADER);
+
+            glLinkProgram(ShaderPrograms[name]);
+        }
+
+        Debug::Log("Renderer initialized with custom shader programs",1);
     }
 
     void Render::Draw(const std::vector<VMath::Tri3>& tris) {
@@ -73,6 +109,27 @@ namespace Engine
         glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(tris.size() * 3));
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+    void Render::DrawPoints(const std::vector<VMath::Vec2>& points) {
+        if (points.empty()) return;
+
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+        std::vector<VMath::Vec3> vertices;
+        vertices.reserve(points.size());
+        for (const auto& p : points) {
+            vertices.emplace_back(p.x, p.y, 0.0f);
+        }
+
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VMath::Vec3), vertices.data(), GL_DYNAMIC_DRAW);
+
+        glEnable(GL_PROGRAM_POINT_SIZE);
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(vertices.size()));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
 
     void Render::Poll() {
@@ -101,8 +158,7 @@ namespace Engine
 
         for (auto const& [name, program] : ShaderPrograms) glDeleteProgram(program);
 
-        if (window && glContext) {
-            SDL_GL_MakeCurrent(window, NULL);
+        if (glContext) {
             SDL_GL_DestroyContext(glContext);
             glContext = nullptr;
         }
@@ -116,7 +172,7 @@ namespace Engine
         Debug::Log("Render Destructed", 2);
     }
 
-    void Render::AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type) {
+    void Render::AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type, bool Link) {
         auto program = ShaderPrograms.find(programName);
         Debug::Log("Attaching Shader: " + shaderPath, 2);
         if (program == ShaderPrograms.end()) {
@@ -136,7 +192,7 @@ namespace Engine
         glShaderSource(shader, 1, &srcPtr, nullptr);
         glCompileShader(shader);
 
-        int success;
+        GLint success;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             char infoLog[512];
@@ -148,45 +204,137 @@ namespace Engine
         glAttachShader(program->second, shader);
         glDeleteShader(shader);
 
+        if (!Link) return;
         glLinkProgram(program->second);
-    }
-
-    void Render::CreateProgram(const std::string& programName) {
-        ShaderPrograms[programName] = glCreateProgram();
-        glUseProgram(ShaderPrograms[programName]);
-        currentProgram = ShaderPrograms[programName];
-    }
-
-    void Render::SetProgram(const std::string& programName) {
-        if (ShaderPrograms.find(programName) != ShaderPrograms.end()) {
-            glUseProgram(ShaderPrograms[programName]);
-            currentProgram = ShaderPrograms[programName];
+        glGetProgramiv(program->second, GL_LINK_STATUS, &success);
+        if (!success) {
+            char infoLog[512];
+            glGetProgramInfoLog(program->second, 512, nullptr, infoLog);
+            throw std::runtime_error("Program Linking Failed: " + std::string(infoLog));
         }
-        else Debug::Log("ERROR: Program not found: " + programName, 1);
     }
+
+    void Render::SetProgram(GLuint program) {
+        Debug::Log("Choosing program: " + std::to_string(program), 2);
+        if (currentProgram != program) {
+            glUseProgram(program);
+            currentProgram = program;
+
+            GLint active = 0;
+            glGetIntegerv(GL_CURRENT_PROGRAM, &active);
+            Debug::Log("SetProgram: requested " + std::to_string(program) + " -> GL_ACTIVE " + std::to_string(active), 3);
+        }
+    }
+
+    void Render::SetProgram(const std::string& name, bool Force) {
+        Debug::Log("Choosing program: " + name, 2);
+        auto it = ShaderPrograms.find(name);
+
+        if (it == ShaderPrograms.end()) {
+            if (!Force) { Debug::Log("ERROR: Program not found: " + name, 1); return; }
+            else { Debug::Log("Program not found: " + name + " (forcing creation)", 2); }
+            GLuint program = glCreateProgram();
+            it = ShaderPrograms.emplace(name, program).first;
+        }
+
+        if (currentProgram != it->second) {
+            glUseProgram(it->second);
+            currentProgram = it->second;
+        }
+    }
+
+    void ensure_program_bound_for_uniform(GLuint currentProgram) {
+        GLint active = 0;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &active);
+        if (static_cast<GLuint>(active) != currentProgram) {
+            glUseProgram(currentProgram);
+        }
+    }
+
     void Render::SetUniform(const std::string& name, int x) {
-        GLint loc = glGetUniformLocation(currentProgram, name.c_str());
-        if (loc != -1) glUniform1i(loc, x);
-        else Debug::Log("ERROR: Uniform not found: " + name, 1); }
-    void Render::SetUniform(const std::string& name, float x) {
-        GLint loc = glGetUniformLocation(currentProgram, name.c_str());
+        if (currentProgram == 0) {
+                Debug::Log("ERROR: No program bound when setting uniform: " + name, 1);
+                return;
+            }
+            ensure_program_bound_for_uniform(currentProgram);
+
+            std::string key = programUniformKey(currentProgram, name);
+            GLint loc;
+            auto it = uniformCache.find(key);
+            if (it != uniformCache.end()) loc = it->second;
+            else { loc = glGetUniformLocation(currentProgram, name.c_str()); uniformCache.emplace(key, loc); }
+
+            if (loc != -1) glUniform1i(loc, x);
+            else Debug::Log("ERROR: Uniform not found: " + name, 1); }
+    void Render::SetUniform(const std::string& name, float x) {if (currentProgram == 0) {
+            Debug::Log("ERROR: No program bound when setting uniform: " + name, 1);
+            return;
+        }
+        ensure_program_bound_for_uniform(currentProgram);
+
+        std::string key = programUniformKey(currentProgram, name);
+        GLint loc;
+        auto it = uniformCache.find(key);
+        if (it != uniformCache.end()) loc = it->second;
+        else { loc = glGetUniformLocation(currentProgram, name.c_str()); uniformCache.emplace(key, loc); }
+
         if (loc != -1) glUniform1f(loc, x);
         else Debug::Log("ERROR: Uniform not found: " + name, 1); }
-    void Render::SetUniform(const std::string& name, VMath::Vec2 x) {
-        GLint loc = glGetUniformLocation(currentProgram, name.c_str());
+    void Render::SetUniform(const std::string& name, VMath::Vec2 x) {if (currentProgram == 0) {
+            Debug::Log("ERROR: No program bound when setting uniform: " + name, 1);
+            return;
+        }
+        ensure_program_bound_for_uniform(currentProgram);
+
+        std::string key = programUniformKey(currentProgram, name);
+        GLint loc;
+        auto it = uniformCache.find(key);
+        if (it != uniformCache.end()) loc = it->second;
+        else { loc = glGetUniformLocation(currentProgram, name.c_str()); uniformCache.emplace(key, loc); }
+
         if (loc != -1) glUniform2f(loc, x.x, x.y);
         else Debug::Log("ERROR: Uniform not found: " + name, 1); }
-    void Render::SetUniform(const std::string& name, VMath::Vec3 x) {
-        GLint loc = glGetUniformLocation(currentProgram, name.c_str());
+    void Render::SetUniform(const std::string& name, VMath::Vec3 x) {if (currentProgram == 0) {
+            Debug::Log("ERROR: No program bound when setting uniform: " + name, 1);
+            return;
+        }
+        ensure_program_bound_for_uniform(currentProgram);
+
+        std::string key = programUniformKey(currentProgram, name);
+        GLint loc;
+        auto it = uniformCache.find(key);
+        if (it != uniformCache.end()) loc = it->second;
+        else { loc = glGetUniformLocation(currentProgram, name.c_str()); uniformCache.emplace(key, loc); }
+
         if (loc != -1) glUniform3f(loc, x.x, x.y, x.z);
         else Debug::Log("ERROR: Uniform not found: " + name, 1); }
-    void Render::SetUniform(const std::string& name, VMath::Vec4 x) {
-        GLint loc = glGetUniformLocation(currentProgram, name.c_str());
+    void Render::SetUniform(const std::string& name, VMath::Vec4 x) {if (currentProgram == 0) {
+            Debug::Log("ERROR: No program bound when setting uniform: " + name, 1);
+            return;
+        }
+        ensure_program_bound_for_uniform(currentProgram);
+
+        std::string key = programUniformKey(currentProgram, name);
+        GLint loc;
+        auto it = uniformCache.find(key);
+        if (it != uniformCache.end()) loc = it->second;
+        else { loc = glGetUniformLocation(currentProgram, name.c_str()); uniformCache.emplace(key, loc); }
+
         if (loc != -1) glUniform4f(loc, x.x, x.y, x.z, x.w);
         else Debug::Log("ERROR: Uniform not found: " + name, 1); }
-    void Render::SetUniform(const std::string& name, VMath::m4 x) {
-        GLint loc = glGetUniformLocation(currentProgram, name.c_str());
-        if (loc != -1) glUniformMatrix4fv(loc, 1, GL_FALSE, x.data());
+    void Render::SetUniform(const std::string& name, VMath::m4 x) {if (currentProgram == 0) {
+            Debug::Log("ERROR: No program bound when setting uniform: " + name, 1);
+            return;
+        }
+        ensure_program_bound_for_uniform(currentProgram);
+
+        std::string key = programUniformKey(currentProgram, name);
+        GLint loc;
+        auto it = uniformCache.find(key);
+        if (it != uniformCache.end()) loc = it->second;
+        else { loc = glGetUniformLocation(currentProgram, name.c_str()); uniformCache.emplace(key, loc); }
+
+        if (loc != -1) glUniformMatrix4fv(loc, 1, GL_TRUE, x.data());
         else Debug::Log("ERROR: Uniform not found: " + name, 1); }
 
     void Render::Swap() { if (!window) return; SDL_GL_SwapWindow(window); }

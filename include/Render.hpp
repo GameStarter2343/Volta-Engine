@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include <array>
 
 namespace Engine
 {
@@ -17,6 +18,7 @@ namespace Engine
         float aspect;
 
         Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderPath = "external/shaders/basic");
+        Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, std::array<bool, 6>> shaders);
         ~Render();
 
         Render(const Render&) = delete;
@@ -25,6 +27,7 @@ namespace Engine
         Render& operator=(Render&&) = delete;
 
         void Draw(const std::vector<VMath::Tri3>& tris);
+        void DrawPoints(const std::vector<VMath::Vec2>& points);
 
         void Poll();
         void Swap();
@@ -32,9 +35,12 @@ namespace Engine
         bool IsRunning() const { return isRunning; }
         SDL_Window* GetWindow() const { return window; }
 
-        void AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type);
-        void SetProgram(const std::string& programName);
-        void CreateProgram(const std::string& programName);
+        void AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type, bool Link = false);
+        void SetProgram(const std::string& programName, bool Force = false);
+        void SetProgram(GLuint program);
+
+        GLuint GetCurrentProgram() const { return currentProgram; }
+
 
         void SetUniform(const std::string& name, int x);
         void SetUniform(const std::string& name, float x);
@@ -54,8 +60,9 @@ namespace Engine
 
         GLuint VAO;
         GLuint VBO;
-        GLint currentProgram;
+        GLuint currentProgram;
         std::unordered_map<std::string, GLuint> ShaderPrograms;
+        std::unordered_map<std::string, GLint> uniformCache;
 
         void InitShaders(std::string shaderPath);
         void InitRender(std::string title, bool fullscreen, bool vsync);
