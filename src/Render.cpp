@@ -67,9 +67,9 @@ namespace Engine
         if (std::filesystem::exists("external/shaders/" + shaderName + ".vert")) AttachShader("basic", "external/shaders/" + shaderName + ".vert", GL_VERTEX_SHADER);
         if (std::filesystem::exists("external/shaders/" + shaderName + ".frag")) AttachShader("basic", "external/shaders/" + shaderName + ".frag", GL_FRAGMENT_SHADER);
         if (std::filesystem::exists("external/shaders/" + shaderName + ".frag")) AttachShader("basic", "external/shaders/" + shaderName + ".geom", GL_GEOMETRY_SHADER);
-        if (std::filesystem::exists("external/shaders/" + shaderName + ".frag")) AttachShader("basic", "external/shaders/" + shaderName + ".tesc", GL_TESS_CONTROL_SHADER);
-        if (std::filesystem::exists("external/shaders/" + shaderName + ".frag")) AttachShader("basic", "external/shaders/" + shaderName + ".tese", GL_TESS_EVALUATION_SHADER);
-        if (std::filesystem::exists("external/shaders/" + shaderName + ".frag")) AttachShader("basic", "external/shaders/" + shaderName + ".comp", GL_COMPUTE_SHADER);
+        if (std::filesystem::exists("external/shaders/" + shaderName + ".tesc")) AttachShader("basic", "external/shaders/" + shaderName + ".tesc", GL_TESS_CONTROL_SHADER);
+        if (std::filesystem::exists("external/shaders/" + shaderName + ".tese")) AttachShader("basic", "external/shaders/" + shaderName + ".tese", GL_TESS_EVALUATION_SHADER);
+        if (std::filesystem::exists("external/shaders/" + shaderName + ".comp")) AttachShader("basic", "external/shaders/" + shaderName + ".comp", GL_COMPUTE_SHADER);
 
         glLinkProgram(ShaderPrograms["basic"]);
         GLint isLinked = false;
@@ -158,7 +158,7 @@ namespace Engine
             if (event.type == SDL_EVENT_WINDOW_RESIZED) {
                 w = event.window.data1;
                 h = event.window.data2;
-                aspect = float(w) / float(h);
+                if (h >= VMath::EPSILON) aspect = float(w) / float(h);
                 glViewport(0, 0, w, h);
                 Debug::Log("EVENT: Window resized: " + std::to_string(w) + "x" + std::to_string(h), 3);
             }
@@ -175,10 +175,10 @@ namespace Engine
         fpsTimer += deltaTime;
         frameCount++;
         if (fpsTimer >= 5.0f) {
-            fpsTimer = 0.0f;
-            frameCount = 0;
-
             Debug::Log("FPS: " + std::to_string(frameCount), 3);
+
+            frameCount = 0;
+            fpsTimer = 0.0f;
         }
         lastFrameTime = currentFrameTime;
     }
@@ -200,7 +200,6 @@ namespace Engine
             window = nullptr;
         }
         ShaderPrograms.clear();
-        SDL_Quit();
         Debug::Log("Render Destructed", 2);
     }
 

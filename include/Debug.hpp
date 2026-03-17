@@ -1,22 +1,29 @@
 #pragma once
 
-#include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <fstream>
+#include <cstdint>
 #include <string>
 #include "VMath.hpp"
 class Debug {
 public:
-    inline static uint8_t isOn;
+    inline static uint8_t lvl;
     inline static std::fstream file;
-    Debug(uint8_t isOn) {
-        if (isOn > 0) {
-            Debug::isOn = isOn;
-            file.open("build/log.txt", std::ios::out | std::ios::trunc);
-            if (file.is_open()) {
-                Log("=== ENGINE STARTUP ===\n", 1);
+    Debug(uint8_t lvl) {
+        if (lvl > 0) {
+            Debug::lvl = lvl;
+            std::error_code ec;
+            if (!std::filesystem::create_directories("build", ec) && ec) {
+                std::cout << "Ошибка: " << ec.message() << "\n";
             }
-            else std::cout << "Failed to open log file\n";
+            else {
+                file.open("build/log.txt", std::ios::out | std::ios::trunc);
+                if (file.is_open()) {
+                    Log("=== ENGINE STARTUP ===\n", 1);
+                }
+                else std::cout << "Failed to open log file\n";
+            }
         }
     }
 
@@ -27,9 +34,9 @@ public:
         }
     }
 
-    static void Log(int v, uint8_t l) { if (isOn >= l && file.is_open()) file << v << std::endl; }
-    static void Log(float v, uint8_t l) { if (isOn >= l && file.is_open()) file << v << std::endl; }
-    static void Log(const std::string& s, uint8_t l) { if (isOn >= l && file.is_open()) file << s << std::endl; }
-    static void Log(const VMath::Vec3& v, uint8_t l) { if (isOn >= l && file.is_open()) file << v.x << ", " << v.y << ", " << v.z << std::endl; }
-    static void Log(const VMath::Quaternion& v, uint8_t l) { if (isOn >= l && file.is_open()) file << v.x << ", " << v.y << ", " << v.z << ", " << v.w << std::endl; }
+    static void Log(int v, uint8_t l) { if (lvl >= l && file.is_open()) file << v << std::endl; }
+    static void Log(float v, uint8_t l) { if (lvl >= l && file.is_open()) file << v << std::endl; }
+    static void Log(const std::string& s, uint8_t l) { if (lvl >= l && file.is_open()) file << s << std::endl; }
+    static void Log(const VMath::Vec3& v, uint8_t l) { if (lvl >= l && file.is_open()) file << v.x << ", " << v.y << ", " << v.z << std::endl; }
+    static void Log(const VMath::Quaternion& v, uint8_t l) { if (lvl >= l && file.is_open()) file << v.x << ", " << v.y << ", " << v.z << ", " << v.w << std::endl; }
 };

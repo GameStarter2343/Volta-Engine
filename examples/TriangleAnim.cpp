@@ -62,12 +62,12 @@ int main() {
     // You can configure data here :)
     const int count = 150; // Vertices count
     const float speed = 1.5f; // Vertices move
-    const float bound = 1.2f; // Box size, make it more than 1 to prevent artifacts from appearing
+    const float bound = 1.2f; // Box size, make it more than 1 to prevent artifacts
     const Palette& chosenPalette = Water;
 
     Debug d(3);
     Debug::Log("Starting Triangles Animation", 1);
-    Engine::Render r("Triangles Animation", 1920, 1080, true, true, {
+    Engine::Render r("Triangles Animation", 192, 108, 0, 1, {
         {"Triangle", Vertex | Fragment | Geometry},
         {"Dots", Vertex | Fragment}
     });
@@ -75,7 +75,7 @@ int main() {
     std::uniform_real_distribution<float> posDist(-bound, bound);
     std::uniform_real_distribution<float> dirDist(0.0f, 1.0f);
     std::vector<VMath::Vec2> directions(count);
-    std::vector<VMath::Vec2> positions(count + 4);
+    std::vector<VMath::Vec2> positions(count + 4); // Extra 4 points for the box corners to prevent artifacts
 
     positions[0] = VMath::Vec2(-bound, -bound);
     positions[1] = VMath::Vec2(bound, -bound);

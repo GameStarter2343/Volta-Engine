@@ -21,13 +21,7 @@ namespace Engine
 {
     class Render {
     public:
-        int w;
-        int h;
-        float aspect;
-
-        float deltaTime;
-
-        Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderPath = "external/shaders/basic");
+        Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderPath = "basic");
         Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, uint8_t> shaders);
         ~Render();
 
@@ -51,6 +45,10 @@ namespace Engine
         void SetProgram(GLuint program);
 
         GLuint GetCurrentProgram() const { return currentProgram; }
+        VMath::Vec2 GetWindowSize() const { return VMath::Vec2(w, h); }
+        float GetAspectRatio() const { return aspect; }
+        float GetDeltaTime() const { return deltaTime; }
+        int GetFPS() const { return round(1.0f / deltaTime); }
 
         void SetUniform(const std::string& name, int x);
         void SetUniform(const std::string& name, float x);
@@ -63,7 +61,11 @@ namespace Engine
         bool vsync;
 
     private:
+        int w;
+        int h;
+        float aspect;
         bool isRunning;
+        float deltaTime;
         SDL_Window* window;
         SDL_GLContext glContext;
         VMath::Vec4 clearColor;
