@@ -48,7 +48,7 @@ namespace Engine
         VMath::Vec2 GetWindowSize() const { return VMath::Vec2(w, h); }
         float GetAspectRatio() const { return aspect; }
         float GetDeltaTime() const { return deltaTime; }
-        int GetFPS() const { return round(1.0f / deltaTime); }
+        int GetFPS() const { if (deltaTime > VMath::EPSILON) return round(1.0f / deltaTime); return 0; }
 
         void SetUniform(const std::string& name, int x);
         void SetUniform(const std::string& name, float x);

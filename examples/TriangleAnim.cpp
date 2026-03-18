@@ -67,7 +67,7 @@ int main() {
 
     Debug d(3);
     Debug::Log("Starting Triangles Animation", 1);
-    Engine::Render r("Triangles Animation", 192, 108, 0, 1, {
+    Engine::Render r("Triangles Animation", 1920, 1080, 1, 1, {
         {"Triangle", Vertex | Fragment | Geometry},
         {"Dots", Vertex | Fragment}
     });
@@ -102,7 +102,7 @@ int main() {
         r.Poll();
 
         for (int i = 4; i < count; ++i) {
-            positions[i] += directions[i - 4] / 100 * speed * r.deltaTime;
+            positions[i] += directions[i - 4] / 100 * speed * r.GetDeltaTime();
             if (positions[i].x > bound) positions[i].x = -bound;
             else if (positions[i].x < -bound) positions[i].x = bound;
             if (positions[i].y > bound) positions[i].y = -bound;

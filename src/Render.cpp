@@ -15,6 +15,7 @@ namespace Engine
             Debug::Log("FATAL: Failed to initialize SDL", 1);
             throw std::runtime_error(SDL_GetError());
         }
+        lastFrameTime = SDL_GetTicks();
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
