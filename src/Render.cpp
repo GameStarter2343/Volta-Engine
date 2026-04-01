@@ -1,4 +1,5 @@
 #include "../include/Render.hpp"
+#include "../include/Window.hpp"
 #include "../include/Debug.hpp"
 #include "../external/glad/glad.h"
 #include <SDL3/SDL.h>
@@ -26,13 +27,12 @@ namespace Engine
         Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
         if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
 
-        window = SDL_CreateWindow(title.c_str(), w, h, flags);
         if (!window) {
             Debug::Log("FATAL: " + std::string(SDL_GetError()), 1);
             throw std::runtime_error("FATAL: " + std::string(SDL_GetError()));
         }
 
-        glContext = SDL_GL_CreateContext(window);
+        glContext = SDL_GL_CreateContext(window->GetWindow());
         if (!glContext) {
             Debug::Log("FATAL: " + std::string(SDL_GetError()), 1);
             throw std::runtime_error("FATAL: " + std::string(SDL_GetError()));
@@ -44,7 +44,7 @@ namespace Engine
             throw std::runtime_error("FATAL: Failed to initialize GLAD");
         }
 
-        glViewport(0, 0, w, h);
+        glViewport(0, 0, window->GetWidth(), window->GetHeight());
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glGenVertexArrays(1, &VAO);
@@ -60,7 +60,7 @@ namespace Engine
 
     Render::Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::string shaderName)
         : window(nullptr), isRunning(true), glContext(nullptr)
-        , clearColor(0.1f, 0.1f, 0.17f, 1.0f), w(w), h(h), aspect(float(w)/float(h))
+        , clearColor(0.1f, 0.1f, 0.17f, 1.0f)
         , fullscreen(fullscreen), vsync(vsync), VAO(0), VBO(0), currentProgram(0)
     {
         InitRender(title, fullscreen, vsync);
@@ -88,7 +88,7 @@ namespace Engine
 
     Render::Render(const char* title, int w, int h, bool fullscreen, bool vsync, std::unordered_map<std::string, uint8_t> shaders)
         : window(nullptr), isRunning(true), glContext(nullptr)
-        , clearColor(0.1f, 0.1f, 0.17f, 1.0f), w(w), h(h), aspect(float(w)/float(h))
+        , clearColor(0.1f, 0.1f, 0.17f, 1.0f)
         , fullscreen(fullscreen), vsync(vsync), VAO(0), VBO(0), currentProgram(0)
     {
         InitRender(title, fullscreen, vsync);
@@ -157,11 +157,10 @@ namespace Engine
                 Debug::Log("EVENT: SDL Quit Event Called", 1);
             }
             if (event.type == SDL_EVENT_WINDOW_RESIZED) {
-                w = event.window.data1;
-                h = event.window.data2;
-                if (h >= VMath::EPSILON) aspect = float(w) / float(h);
-                glViewport(0, 0, w, h);
-                Debug::Log("EVENT: Window resized: " + std::to_string(w) + "x" + std::to_string(h), 3);
+                window->SetWidth(event.window.data1);
+                window->SetHeight(event.window.data2);
+                glViewport(0, 0, window->GetWidth(), window->GetHeight());
+                Debug::Log("EVENT: Window resized: " + std::to_string(window->GetWidth()) + "x" + std::to_string(window->GetHeight()), 3);
             }
         }
 
@@ -197,7 +196,6 @@ namespace Engine
         }
 
         if (window) {
-            SDL_DestroyWindow(window);
             window = nullptr;
         }
         ShaderPrograms.clear();
@@ -364,6 +362,6 @@ namespace Engine
         if (loc != -1) glUniformMatrix4fv(loc, 1, GL_TRUE, x.data());
         else Debug::Log("ERROR: Uniform not found: " + name, 1); }
 
-    void Render::Swap() { if (!window) return; SDL_GL_SwapWindow(window); }
+    void Render::Swap() { if (!window) return; if(!SDL_GL_SwapWindow(window->GetWindow())) Debug::Log("ERROR: SDL_GL_SwapWindow failed", 1); }
     void Render::SetClearColor(const VMath::Vec4& color) { clearColor = color; }
 }

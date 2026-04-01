@@ -67,6 +67,7 @@ int main() {
 
     Debug d(3);
     Debug::Log("Starting Triangles Animation", 1);
+    Engine::Window window("Triangles Animation", 1920, 1080);
     Engine::Render r("Triangles Animation", 1920, 1080, 1, 1, {
         {"Triangle", Vertex | Fragment | Geometry},
         {"Dots", Vertex | Fragment}

@@ -3,11 +3,12 @@
 #include "../external/glad/glad.h"
 #include <SDL3/SDL.h>
 #include "VMath.hpp"
+#include "Window.hpp"
 
 #include <unordered_map>
 #include <string>
 #include <vector>
-
+class Window;
 enum ShaderStage {
     Vertex       = 1 << 0,
     Fragment     = 1 << 1,
@@ -38,15 +39,12 @@ namespace Engine
         void Update();
         void SetClearColor(const VMath::Vec4& color);
         bool IsRunning() const { return isRunning; }
-        SDL_Window* GetWindow() const { return window; }
 
         void AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type);
         void SetProgram(const std::string& programName, bool Force = false);
         void SetProgram(GLuint program);
 
         GLuint GetCurrentProgram() const { return currentProgram; }
-        VMath::Vec2 GetWindowSize() const { return VMath::Vec2(w, h); }
-        float GetAspectRatio() const { return aspect; }
         float GetDeltaTime() const { return deltaTime; }
         int GetFPS() const { if (deltaTime > VMath::EPSILON) return round(1.0f / deltaTime); return 0; }
 
@@ -61,12 +59,9 @@ namespace Engine
         bool vsync;
 
     private:
-        int w;
-        int h;
-        float aspect;
         bool isRunning;
         float deltaTime;
-        SDL_Window* window;
+        Window* window;
         SDL_GLContext glContext;
         VMath::Vec4 clearColor;
         Uint32 lastFrameTime = 0;
