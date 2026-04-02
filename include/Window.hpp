@@ -3,22 +3,27 @@
 #include "SDL3/SDL.h"
 
 namespace Engine {
-    class Window {
-    public:
-        Window(const char* title, int width, int height);
-        ~Window();
-        int GetWidth() const { return w; }
-        int GetHeight() const { return h; }
-        float GetAspect() const { return aspect; }
-        SDL_Window* GetWindow() const { return window; }
+class Window {
+public:
+    Window(const char* title, int width, int height, bool fullscreen = false);
+    ~Window();
 
-        void SetWidth(int width) { w = width; }
-        void SetHeight(int height) { h = height; }
+    bool PollEvents(bool& isRunning);
+    bool Resize(int& outWidth, int& outHeight);
 
-    private:
-        int w;
-        int h;
-        float aspect;
-        SDL_Window* window;
-    };
-}
+    int GetWidth() const { return w; }
+    int GetHeight() const { return h; }
+    float GetAspect() const { return aspect; }
+    SDL_Window* GetWindow() const { return window; }
+
+    void SetWidth(int width);
+    void SetHeight(int height);
+
+private:
+    int w;
+    int h;
+    float aspect;
+    bool wasResized;
+    SDL_Window* window;
+};
+} // namespace Engine

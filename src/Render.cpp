@@ -11,7 +11,7 @@
 namespace Engine
 {
     static std::string programUniformKey(GLuint program, const std::string& name) { return std::to_string(program) + ":" + name; }
-    void Render::InitRender(std::string title, bool fullscreen, bool vsync) {
+    void Render::InitRender(std::string title, int width, int height, bool fullscreen, bool vsync) {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             Debug::Log("FATAL: Failed to initialize SDL", 1);
             throw std::runtime_error(SDL_GetError());
@@ -24,8 +24,9 @@ namespace Engine
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-        Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-        if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
+        if (!window) {
+            window = new Window(title.c_str(), width, height, fullscreen);
+        }
 
         if (!window) {
             Debug::Log("FATAL: " + std::string(SDL_GetError()), 1);
@@ -63,7 +64,7 @@ namespace Engine
         , clearColor(0.1f, 0.1f, 0.17f, 1.0f)
         , fullscreen(fullscreen), vsync(vsync), VAO(0), VBO(0), currentProgram(0)
     {
-        InitRender(title, fullscreen, vsync);
+        InitRender(title, w, h, fullscreen, vsync);
         SetProgram("basic", true);
         if (std::filesystem::exists("external/shaders/" + shaderName + ".vert")) AttachShader("basic", "external/shaders/" + shaderName + ".vert", GL_VERTEX_SHADER);
         if (std::filesystem::exists("external/shaders/" + shaderName + ".frag")) AttachShader("basic", "external/shaders/" + shaderName + ".frag", GL_FRAGMENT_SHADER);
@@ -91,7 +92,7 @@ namespace Engine
         , clearColor(0.1f, 0.1f, 0.17f, 1.0f)
         , fullscreen(fullscreen), vsync(vsync), VAO(0), VBO(0), currentProgram(0)
     {
-        InitRender(title, fullscreen, vsync);
+        InitRender(title, w, h, fullscreen, vsync);
         for (const auto& [name, mask] : shaders) {
             SetProgram(name, true);
 
@@ -150,17 +151,13 @@ namespace Engine
     }
 
     void Render::Poll() {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
-                isRunning = false;
-                Debug::Log("EVENT: SDL Quit Event Called", 1);
-            }
-            if (event.type == SDL_EVENT_WINDOW_RESIZED) {
-                window->SetWidth(event.window.data1);
-                window->SetHeight(event.window.data2);
-                glViewport(0, 0, window->GetWidth(), window->GetHeight());
-                Debug::Log("EVENT: Window resized: " + std::to_string(window->GetWidth()) + "x" + std::to_string(window->GetHeight()), 3);
+        if (window) {
+            window->PollEvents(isRunning);
+
+            int resizedWidth = 0;
+            int resizedHeight = 0;
+            if (window->Resize(resizedWidth, resizedHeight)) {
+                glViewport(0, 0, resizedWidth, resizedHeight);
             }
         }
 
@@ -196,6 +193,7 @@ namespace Engine
         }
 
         if (window) {
+            delete window;
             window = nullptr;
         }
         ShaderPrograms.clear();

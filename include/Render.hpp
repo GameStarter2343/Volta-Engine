@@ -73,7 +73,7 @@ namespace Engine
         float fpsTimer;
         int frameCount;
 
-        void InitRender(std::string title, bool fullscreen, bool vsync);
+        void InitRender(std::string title, int width, int height, bool fullscreen, bool vsync);
         GLuint CompileShader(const char* source, GLenum type);
     };
 } // namespace Engine

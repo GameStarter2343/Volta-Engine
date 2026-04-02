@@ -1,7 +1,7 @@
-#include "../include/Render.hpp"
-#include "../include/Debug.hpp"
+#include "../include/Engine.hpp"
 #include "../external/libs/delaunator.hpp"
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_scancode.h>
 #include <SDL3/SDL_timer.h>
 #include <vector>
 #include <random>
@@ -67,11 +67,11 @@ int main() {
 
     Debug d(3);
     Debug::Log("Starting Triangles Animation", 1);
-    Engine::Window window("Triangles Animation", 1920, 1080);
     Engine::Render r("Triangles Animation", 1920, 1080, 1, 1, {
         {"Triangle", Vertex | Fragment | Geometry},
         {"Dots", Vertex | Fragment}
     });
+    Engine::Input inp;
     std::mt19937 rng(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<float> posDist(-bound, bound);
     std::uniform_real_distribution<float> dirDist(0.0f, 1.0f);
@@ -101,6 +101,8 @@ int main() {
     while (r.IsRunning()) {
         r.Update();
         r.Poll();
+        inp.Update();
+        if (inp.GetKey(SDL_SCANCODE_ESCAPE)) break;
 
         for (int i = 4; i < count; ++i) {
             positions[i] += directions[i - 4] / 100 * speed * r.GetDeltaTime();
