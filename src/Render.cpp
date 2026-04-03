@@ -8,8 +8,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-namespace Engine
-{
+namespace Engine {
     static std::string programUniformKey(GLuint program, const std::string& name) { return std::to_string(program) + ":" + name; }
     void Render::InitRender(std::string title, int width, int height, bool fullscreen, bool vsync) {
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -178,6 +177,11 @@ namespace Engine
             fpsTimer = 0.0f;
         }
         lastFrameTime = currentFrameTime;
+    }
+
+    void Render::Exit() {
+        isRunning = false;
+        Debug::Log("Renderer exit requested", 2);
     }
 
     Render::~Render() {

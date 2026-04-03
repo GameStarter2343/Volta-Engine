@@ -31,7 +31,7 @@ const Palette Water = {
     VMath::rgb(0, 43, 121),
     0.99f,
     0.0f,
-    -0.95f
+    -1.01f
 };
 const Palette Earth = {
     VMath::rgb(8, 113, 86),
@@ -65,13 +65,12 @@ int main() {
     const float bound = 1.2f; // Box size, make it more than 1 to prevent artifacts
     const Palette& chosenPalette = Water;
 
-    Debug d(3);
+    Engine::Start(3);
     Debug::Log("Starting Triangles Animation", 1);
     Engine::Render r("Triangles Animation", 1920, 1080, 1, 1, {
         {"Triangle", Vertex | Fragment | Geometry},
         {"Dots", Vertex | Fragment}
     });
-    Engine::Input inp;
     std::mt19937 rng(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<float> posDist(-bound, bound);
     std::uniform_real_distribution<float> dirDist(0.0f, 1.0f);
@@ -96,16 +95,15 @@ int main() {
     int frameCounter = 0;
     std::vector<VMath::Tri3> cachedTris;
 
-    Uint64 lastTime = SDL_GetTicks();
+    Engine::AttachRenderer(r);
     Debug::Log("Entering main loop", 1);
-    while (r.IsRunning()) {
-        r.Update();
-        r.Poll();
-        inp.Update();
-        if (inp.GetKey(SDL_SCANCODE_ESCAPE)) break;
+    while (Engine::IsRunning()) {
+        Engine::Update();
+        Engine::Poll();
+        if (Engine::Input::GetKey(SDL_SCANCODE_ESCAPE)) Engine::Exit();
 
         for (int i = 4; i < count; ++i) {
-            positions[i] += directions[i - 4] / 100 * speed * r.GetDeltaTime();
+            positions[i] += directions[i - 4] / 100 * speed * Engine::GetDeltaTime();
             if (positions[i].x > bound) positions[i].x = -bound;
             else if (positions[i].x < -bound) positions[i].x = bound;
             if (positions[i].y > bound) positions[i].y = -bound;
@@ -163,4 +161,6 @@ int main() {
 
         r.Swap();
     }
+
+    Engine::Exit();
 }

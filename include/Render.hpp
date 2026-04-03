@@ -37,8 +37,10 @@ namespace Engine
         void Poll();
         void Swap();
         void Update();
+        void Exit();
         void SetClearColor(const VMath::Vec4& color);
         bool IsRunning() const { return isRunning; }
+
 
         void AttachShader(const std::string& programName, const std::string& shaderPath, GLenum type);
         void SetProgram(const std::string& programName, bool Force = false);
