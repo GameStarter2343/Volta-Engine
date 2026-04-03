@@ -25,7 +25,7 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
 add_executable(app
     ${ENGINE_SOURCES}
-    examples/TriangleAnim.cpp
+    examples/FluidSim.cpp
 )
 
 target_link_libraries(app
