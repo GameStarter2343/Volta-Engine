@@ -18,7 +18,7 @@ struct Palette {
 };
 
 const Palette Fire = {
-    VMath::rgb(255, 255, 133), //Color1, the one at the top
+    VMath::rgb(255, 255, 163), //Color1, the one at the top
     VMath::rgb(255, 175, 46),  //Color2, this one in the middle
     VMath::rgb(122, 46, 6),    //Color3, and this one at the bottom
     0.99f,   //maxY
@@ -60,8 +60,8 @@ const Palette Space = {
 
 int main() {
     // You can configure data here :)
-    const int count = 150; // Vertices count
-    const float speed = 1.5f; // Vertices move
+    const int count = 300; // Vertices count
+    const float speed = 1.0f; // Vertices move
     const float bound = 1.2f; // Box size, make it more than 1 to prevent artifacts
     const Palette& chosenPalette = Water;
 
@@ -155,7 +155,7 @@ int main() {
             r.SetProgram("Dots");
             r.SetUniform("mvp", VMath::m4::Identity());
             r.SetUniform("pointSizeMin", 3.0f);
-            r.SetUniform("pointSizeMax", 8.0f);
+            r.SetUniform("pointSizeMax", 6.0f);
             r.DrawPoints(positions);
         }
 

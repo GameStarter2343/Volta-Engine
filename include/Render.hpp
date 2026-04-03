@@ -65,7 +65,7 @@ namespace Engine
         float deltaTime;
         Window* window;
         SDL_GLContext glContext;
-        VMath::Vec4 clearColor;
+        VMath::Vec4 clearColor = VMath::rgba(25, 26, 42);
         Uint32 lastFrameTime = 0;
         GLuint VAO;
         GLuint VBO;
