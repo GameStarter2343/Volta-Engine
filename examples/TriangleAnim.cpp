@@ -1,8 +1,5 @@
 #include "../include/Engine.hpp"
 #include "../external/libs/delaunator.hpp"
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_scancode.h>
-#include <SDL3/SDL_timer.h>
 #include <vector>
 #include <random>
 #include <chrono>
