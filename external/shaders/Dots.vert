@@ -28,8 +28,13 @@ uniform mat4 mvp;
 uniform float pointSizeMin;
 uniform float pointSizeMax;
 
+uniform vec4 color;
+
+out vec4 fragColor;
+
 void main()
 {
     gl_Position = mvp * vec4(inPos, 0.0, 1.0);
     gl_PointSize = mix(pointSizeMin, pointSizeMax, smoothNoise(inPos.xy * 40));
+    fragColor = color;
 }

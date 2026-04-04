@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "VMath.hpp"
+#include "VPhysics.hpp"
 #include "Render.hpp"
 #include "Debug.hpp"
 #include "Input.hpp"

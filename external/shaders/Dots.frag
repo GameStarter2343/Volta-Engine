@@ -1,6 +1,6 @@
 #version 450 core
 out vec4 FragColor;
-
+in vec4 fragColor;
 void main()
 {
     vec2 p = gl_PointCoord * 2.0 - 1.0;
@@ -11,5 +11,5 @@ void main()
     float alpha = 1.0 - dist;
     alpha = pow(alpha, 1.5);
 
-    FragColor = vec4(0.0f, 0.0f, 0.0f, alpha);
+    FragColor = fragColor * vec4(1.0f, 1.0f, 1.0f, alpha);
 }

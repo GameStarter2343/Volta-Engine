@@ -4,6 +4,7 @@ namespace Engine {
 
     void Engine::Start(Settings settings, std::unordered_map<std::string, uint8_t> shaders) {
             Debug d(settings.debugLevel);
+            Input::Init();
             const int renderWidth = static_cast<int>(settings.renderSize & 0xFFFF);
             const int renderHeight = static_cast<int>((settings.renderSize >> 16) & 0xFFFF);
             render = new Render(
