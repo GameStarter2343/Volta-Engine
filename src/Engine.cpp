@@ -1,15 +1,22 @@
 #include "../include/Engine.hpp"
 
-#include <memory>
-
 namespace Engine {
 
     void Engine::Start(Settings settings, std::unordered_map<std::string, uint8_t> shaders) {
-        Debug d(settings.debugLevel);
-        window = new Window(settings.title, settings.windowSize, settings.windowSize, settings.windowFlags & SDL_WINDOW_FULLSCREEN);
-        render = new Render(settings.title, settings.windowSize, settings.windowSize, settings.windowFlags & SDL_WINDOW_FULLSCREEN, settings.windowFlags, shaders);
-        isRunning = true;
-    }
+            Debug d(settings.debugLevel);
+            const int renderWidth = static_cast<int>(settings.renderSize & 0xFFFF);
+            const int renderHeight = static_cast<int>((settings.renderSize >> 16) & 0xFFFF);
+            render = new Render(
+                settings.title,
+                renderWidth,
+                renderHeight,
+                settings.windowFlags & SDL_WINDOW_FULLSCREEN,
+                settings.renderFlags != 0,
+                shaders
+            );
+            isRunning = true;
+        }
+
 
     void Engine::AttachRenderer(Render& render) {
         this->render = &render;
