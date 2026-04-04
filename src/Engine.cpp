@@ -36,6 +36,7 @@ namespace Engine {
         if (!isRunning || !render) return;
 
         render->Update();
+        Input::Update();
     }
 
     bool Engine::IsRunning() {

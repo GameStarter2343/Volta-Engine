@@ -2,18 +2,18 @@
 
 namespace Engine {
     const bool* Input::keyboardState = nullptr;
-    bool Input::previousKeyboardState[SDL_SCANCODE_COUNT] = {false};
+    bool Input::previousKeyboardState[SDL_SCANCODE_COUNT] = { false };
 
     Uint32 Input::mouseButtons = 0;
-    Uint32 Input::previousMouseButtons = 0;          // ← added (was missing)
+    Uint32 Input::previousMouseButtons = 0;
     SDL_FPoint Input::mousePosition = {0.0f, 0.0f};
 
     void Input::Init() {
-        SDL_PumpEvents();
-
         keyboardState = SDL_GetKeyboardState(nullptr);
 
         memcpy(previousKeyboardState, keyboardState, SDL_SCANCODE_COUNT);
+
+        SDL_PumpEvents();
 
         mouseButtons = SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
         previousMouseButtons = mouseButtons;

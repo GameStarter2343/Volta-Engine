@@ -1,27 +1,33 @@
 #include "../include/Engine.hpp"
+#include <SDL3/SDL_scancode.h>
 #include <random>
 using namespace VMath;
 
 Settings s{
     "Fluid Simulation",
     1,
-    70780800,
+    1080 << 16 | 1920,
     SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL,
-    70780800,
+    1080 << 16 | 1920,
     0
 };
 int main() {
     Engine::Engine engine;
     engine.Start(s, {
         {"Dots", Vertex | Fragment},
+        {"basic", Vertex | Fragment},
     });
-    int PointCount = 5000;
+
+    int PointCount = 500;
     Vec2 Bounds = {1.5f, 1.5f};
-    std::mt19937 rng(std::chrono::system_clock::now().time_since_epoch().count());
-    std::uniform_real_distribution<float> posDistX(-Bounds.x/2 + 0.1, Bounds.x/2 - 0.1);
-    std::uniform_real_distribution<float> posDistY(-Bounds.y/2 + 0.1, Bounds.y/2 - 0.1);
     float gravity = 0.003f;
     float speed = 1.0f;
+    float halfX = Bounds.x / 2.0f;
+    float halfY = Bounds.y / 2.0f;
+
+    std::mt19937 rng(std::chrono::system_clock::now().time_since_epoch().count());
+    std::uniform_real_distribution<float> posDistX(-halfX, halfX);
+    std::uniform_real_distribution<float> posDistY(-halfY, halfY);
     std::vector<VMath::Vec2> positions(PointCount);
     std::vector<VMath::Vec2> directions(PointCount);
 
@@ -29,23 +35,21 @@ int main() {
         positions[i] = VMath::Vec2(posDistX(rng), posDistY(rng));
         directions[i] = VMath::Vec2();
     }
-    float halfX = Bounds.x / 2.0f;
-    float halfY = Bounds.y / 2.0f;
+
     while (engine.IsRunning()) {
         engine.Poll();
         engine.Update();
-        Engine::Input::Update();
         if (Engine::Input::GetKey(SDL_SCANCODE_ESCAPE)) {
             engine.Exit();
         }
         if (Engine::Input::GetKey(SDL_SCANCODE_SPACE)) {
             speed = -speed;
         }
-        if (Engine::Input::GetKeyDown(SDL_SCANCODE_LEFT)) {
-            speed /= 0.9f;
+        if (Engine::Input::GetKey(SDL_SCANCODE_UP)) {
+            speed /= 0.995f;
         }
-        if (Engine::Input::GetKeyDown(SDL_SCANCODE_RIGHT)) {
-            speed *= 0.9f;
+        if (Engine::Input::GetKey(SDL_SCANCODE_DOWN)) {
+            speed *= 0.995f;
         }
         for (int i = 0; i < PointCount; ++i) {
             // X axis
@@ -79,7 +83,7 @@ int main() {
         }
         engine.GetRenderer().SetProgram("Dots");
         engine.GetRenderer().SetUniform("color", VMath::rgba(80, 193, 237));
-        engine.GetRenderer().SetUniform("mvp", VMath::m4::Identity());
+        engine.GetRenderer().SetUniform("mvp", VMath::m4::Ortho(-1, 1, -1, 1, -1.0f, 1.0f));
         engine.GetRenderer().SetUniform("pointSizeMin", 10.0f);
         engine.GetRenderer().SetUniform("pointSizeMax", 10.0f);
         engine.GetRenderer().DrawPoints(positions);

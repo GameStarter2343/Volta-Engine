@@ -148,6 +148,19 @@ namespace Engine {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
+    void Render::DrawLinesLoop(const std::vector<VMath::Vec2>& vertices) {
+        if (vertices.empty()) return;
+
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VMath::Vec2), vertices.data(), GL_DYNAMIC_DRAW);
+
+        glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(vertices.size()));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
 
     void Render::Poll() {
         if (window) {

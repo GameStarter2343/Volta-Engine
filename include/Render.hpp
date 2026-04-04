@@ -33,6 +33,7 @@ namespace Engine
 
         void Draw(const std::vector<VMath::Tri3>& tris);
         void DrawPoints(const std::vector<VMath::Vec2>& points);
+        void DrawLinesLoop(const std::vector<VMath::Vec2>& points);
 
         void Poll();
         void Swap();
