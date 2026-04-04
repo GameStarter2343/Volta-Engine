@@ -1,9 +1,18 @@
 #include "../include/Engine.hpp"
 #include <random>
 using namespace VMath;
+
+Settings s{
+    "Fluid Simulation",
+    1,
+    70780800,
+    SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL,
+    70780800,
+    0
+};
 int main() {
-    Engine::Start(3);
-    Engine::Render r("Triangles Animation", 1920, 1080, 1, 1, {
+    Engine::Engine engine;
+    engine.Start(s, {
         {"Dots", Vertex | Fragment},
     });
     int PointCount = 100;
@@ -15,18 +24,18 @@ int main() {
     for (int i = 4; i < PointCount + 4; ++i) {
         positions[i] = VMath::Vec2(posDist(rng), posDist(rng));
     }
-    while (r.IsRunning()) {
-        r.Poll();
-        r.Update();
+    while (engine.IsRunning()) {
+        engine.Poll();
+        engine.Update();
         Engine::Input::Update();
         if (Engine::Input::GetKey(SDL_SCANCODE_ESCAPE)) {
-            r.Exit();
+            engine.Exit();
         }
-        r.SetProgram("Dots");
-        r.SetUniform("mvp", VMath::m4::Identity());
-        r.SetUniform("pointSizeMin", 3.0f);
-        r.SetUniform("pointSizeMax", 6.0f);
-        r.DrawPoints(positions);
-        r.Swap();
+        engine.GetRenderer().SetProgram("Dots");
+        engine.GetRenderer().SetUniform("mvp", VMath::m4::Identity());
+        engine.GetRenderer().SetUniform("pointSizeMin", 3.0f);
+        engine.GetRenderer().SetUniform("pointSizeMax", 6.0f);
+        engine.GetRenderer().DrawPoints(positions);
+        engine.GetRenderer().Swap();
     }
 }

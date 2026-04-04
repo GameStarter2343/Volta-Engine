@@ -6,67 +6,68 @@
 #include <string>
 
 namespace Engine {
-Window::Window(const char* title, int width, int height, bool fullscreen)
-    : w(width), h(height), aspect(static_cast<float>(width) / static_cast<float>(height)), wasResized(false), window(nullptr) {
-    Uint64 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-    if (fullscreen) {
-        flags |= SDL_WINDOW_FULLSCREEN;
-    }
+    Window::Window(const char* title, int width, int height, bool fullscreen) :
+        windowSize((height << 16) | width), aspect(static_cast<float>(width) / static_cast<float>(height)), wasResized(false), window(nullptr)
+    {
+        Uint64 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+        if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
 
-    window = SDL_CreateWindow(title, width, height, flags);
-    if (!window) {
-        throw std::runtime_error("Failed to create window: " + std::string(SDL_GetError()));
-    }
-
-    Input::Init();
-}
-
-Window::~Window() {
-    if (window) {
-        SDL_DestroyWindow(window);
-        window = nullptr;
-    }
-}
-
-bool Window::PollEvents(bool& isRunning) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        Input::HandleEvent(event);
-
-        if (event.type == SDL_EVENT_QUIT) {
-            isRunning = false;
-            Debug::Log("EVENT: SDL Quit Event Called", 1);
-            return false;
+        window = SDL_CreateWindow(title, width, height, flags);
+        if (!window) {
+            throw std::runtime_error("Failed to create window: " + std::string(SDL_GetError()));
         }
 
-        if (event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(window)) {
-            SetWidth(event.window.data1);
-            SetHeight(event.window.data2);
-            wasResized = true;
-            Debug::Log("EVENT: Window resized: " + std::to_string(w) + "x" + std::to_string(h), 3);
+        Input::Init();
+    }
+
+    Window::~Window() {
+        if (window) {
+            SDL_DestroyWindow(window);
+            window = nullptr;
         }
     }
 
-    Input::Update();
-    return true;
-}
+    bool Window::PollEvents(bool& isRunning) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            Input::HandleEvent(event);
 
-bool Window::Resize(int& outWidth, int& outHeight) {
-    if (!wasResized) return false;
+            if (event.type == SDL_EVENT_QUIT) {
+                isRunning = false;
+                Debug::Log("EVENT: SDL Quit Event Called", 1);
+                return false;
+            }
 
-    outWidth = w;
-    outHeight = h;
-    wasResized = false;
-    return true;
-}
+            if (event.type == SDL_EVENT_WINDOW_RESIZED && event.window.windowID == SDL_GetWindowID(window)) {
+                SetWidth(event.window.data1);
+                SetHeight(event.window.data2);
+                wasResized = true;
+                Debug::Log("EVENT: Window resized: " + std::to_string(GetWidth()) + "x" + std::to_string(GetHeight()), 3);
+            }
+        }
 
-void Window::SetWidth(int width) {
-    w = width;
-    aspect = h != 0 ? static_cast<float>(w) / static_cast<float>(h) : 1.0f;
-}
+        Input::Update();
+        return true;
+    }
+    bool Window::Resize(int& outWidth, int& outHeight) {
+        if (!wasResized) return false;
 
-void Window::SetHeight(int height) {
-    h = height;
-    aspect = h != 0 ? static_cast<float>(w) / static_cast<float>(h) : 1.0f;
-}
+        SetWidth(outWidth);
+        SetHeight(outHeight);
+        wasResized = false;
+        return true;
+    }
+
+    void Window::SetWidth(int width) {
+        windowSize &= 0xFFFF0000;
+        windowSize |= width;
+        uint16_t h = GetHeight();
+        aspect = h != 0 ? float(width) / float(h) : 1.0f;
+    }
+    void Window::SetHeight(int height) {
+        windowSize &= 0x0000FFFF;
+        windowSize |= height << 16;
+        uint16_t w = GetWidth();
+        aspect = w != 0 ? float(w) / float(height) : 1.0f;
+    }
 } // namespace Engine

@@ -57,20 +57,26 @@ const Palette Space = {
     0.0f,
     -0.99f
 };
-
+Settings s{
+    "Triangle Animation",
+    1,
+    70780800,
+    SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL,
+    70780800,
+    0
+};
 int main() {
     // You can configure data here :)
     const int count = 300; // Vertices count
     const float speed = 1.0f; // Vertices move
     const float bound = 1.2f; // Box size, make it more than 1 to prevent artifacts
     const Palette& chosenPalette = Water;
-
-    Engine::Start(3);
-    Debug::Log("Starting Triangles Animation", 1);
-    Engine::Render r("Triangles Animation", 1920, 1080, 1, 1, {
+    Engine::Engine engine;
+    engine.Start(s, {
         {"Triangle", Vertex | Fragment | Geometry},
         {"Dots", Vertex | Fragment}
     });
+
     std::mt19937 rng(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<float> posDist(-bound, bound);
     std::uniform_real_distribution<float> dirDist(0.0f, 1.0f);
@@ -95,15 +101,14 @@ int main() {
     int frameCounter = 0;
     std::vector<VMath::Tri3> cachedTris;
 
-    Engine::AttachRenderer(r);
     Debug::Log("Entering main loop", 1);
-    while (Engine::IsRunning()) {
-        Engine::Update();
-        Engine::Poll();
-        if (Engine::Input::GetKey(SDL_SCANCODE_ESCAPE)) Engine::Exit();
+    while (engine.IsRunning()) {
+        engine.Update();
+        engine.Poll();
+        if (Engine::Input::GetKey(SDL_SCANCODE_ESCAPE)) engine.Exit();
 
         for (int i = 4; i < count; ++i) {
-            positions[i] += directions[i - 4] / 100 * speed * Engine::GetDeltaTime();
+            positions[i] += directions[i - 4] / 100 * speed * engine.GetDeltaTime();
             if (positions[i].x > bound) positions[i].x = -bound;
             else if (positions[i].x < -bound) positions[i].x = bound;
             if (positions[i].y > bound) positions[i].y = -bound;
@@ -143,24 +148,24 @@ int main() {
         }
 
         if (!cachedTris.empty()) {
-            r.SetProgram("Triangle");
-            r.SetUniform("mvp", VMath::m4::Identity());
-            r.SetUniform("minY", chosenPalette.minY);
-            r.SetUniform("midY", chosenPalette.midY);
-            r.SetUniform("maxY", chosenPalette.maxY);
-            r.SetUniform("color1", chosenPalette.color1);
-            r.SetUniform("color2", chosenPalette.color2);
-            r.SetUniform("color3", chosenPalette.color3);
-            r.Draw(cachedTris);
-            r.SetProgram("Dots");
-            r.SetUniform("mvp", VMath::m4::Identity());
-            r.SetUniform("pointSizeMin", 3.0f);
-            r.SetUniform("pointSizeMax", 6.0f);
-            r.DrawPoints(positions);
+            engine.GetRenderer().SetProgram("Triangle");
+            engine.GetRenderer().SetUniform("mvp", VMath::m4::Identity());
+            engine.GetRenderer().SetUniform("minY", chosenPalette.minY);
+            engine.GetRenderer().SetUniform("midY", chosenPalette.midY);
+            engine.GetRenderer().SetUniform("maxY", chosenPalette.maxY);
+            engine.GetRenderer().SetUniform("color1", chosenPalette.color1);
+            engine.GetRenderer().SetUniform("color2", chosenPalette.color2);
+            engine.GetRenderer().SetUniform("color3", chosenPalette.color3);
+            engine.GetRenderer().Draw(cachedTris);
+            engine.GetRenderer().SetProgram("Dots");
+            engine.GetRenderer().SetUniform("mvp", VMath::m4::Identity());
+            engine.GetRenderer().SetUniform("pointSizeMin", 3.0f);
+            engine.GetRenderer().SetUniform("pointSizeMax", 6.0f);
+            engine.GetRenderer().DrawPoints(positions);
         }
 
-        r.Swap();
+        engine.GetRenderer().Swap();
     }
 
-    Engine::Exit();
+    engine.Exit();
 }

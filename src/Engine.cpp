@@ -3,62 +3,62 @@
 #include <memory>
 
 namespace Engine {
-namespace {
-std::unique_ptr<Debug> gDebug;
-Render* gRender = nullptr;
-bool gRunning = false;
-}
 
-void Start(uint8_t debugLevel) {
-    if (debugLevel > 0) {
-        gDebug = std::make_unique<Debug>(debugLevel);
+    void Engine::Start(Settings settings, std::unordered_map<std::string, uint8_t> shaders) {
+        Debug d(settings.debugLevel);
+        window = new Window(settings.title, settings.windowSize, settings.windowSize, settings.windowFlags & SDL_WINDOW_FULLSCREEN);
+        render = new Render(settings.title, settings.windowSize, settings.windowSize, settings.windowFlags & SDL_WINDOW_FULLSCREEN, settings.windowFlags, shaders);
+        isRunning = true;
     }
 
-    gRunning = true;
-    Debug::Log("Engine started", 1);
-}
-
-void AttachRenderer(Render& render) {
-    gRender = &render;
-    gRunning = render.IsRunning();
-    Debug::Log("Renderer attached to engine", 2);
-}
-
-void Poll() {
-    if (!gRunning || !gRender) return;
-
-    gRender->Poll();
-    gRunning = gRender->IsRunning();
-}
-
-void Update() {
-    if (!gRunning || !gRender) return;
-
-    gRender->Update();
-}
-
-bool IsRunning() {
-    if (!gRunning) return false;
-
-    if (gRender) {
-        gRunning = gRender->IsRunning();
+    void Engine::AttachRenderer(Render& render) {
+        this->render = &render;
+        isRunning = render.IsRunning();
+        Debug::Log("Renderer attached to engine", 2);
     }
 
-    return gRunning;
-}
+    void Engine::Poll() {
+        if (!isRunning || !render) return;
 
-void Exit() {
-    gRunning = false;
-    if (gRender) {
-        gRender->Exit();
+        render->Poll();
+        isRunning = render->IsRunning();
     }
 
-    Debug::Log("Engine exit requested", 1);
-}
+    void Engine::Update() {
+        if (!isRunning || !render) return;
 
-float GetDeltaTime() {
-    if (!gRender) return 0.0f;
+        render->Update();
+    }
 
-    return gRender->GetDeltaTime();
-}
+    bool Engine::IsRunning() {
+        if (!isRunning) return false;
+
+        if (render) {
+            isRunning = render->IsRunning();
+        }
+
+        return isRunning;
+    }
+
+    void Engine::Exit() {
+        isRunning = false;
+        if (render) {
+            render->Exit();
+        }
+
+        Debug::Log("Engine exit requested", 1);
+    }
+
+    Render& Engine::GetRenderer() {
+        if (!render) {
+            throw std::runtime_error("Renderer is null!");
+        }
+        return *render;
+    }
+
+    float Engine::GetDeltaTime() {
+        if (!render) return 0.0f;
+
+        return render->GetDeltaTime();
+    }
 } // namespace Engine
