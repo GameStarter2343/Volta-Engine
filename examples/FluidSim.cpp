@@ -1,5 +1,4 @@
 #include "../include/Engine.hpp"
-#include <SDL3/SDL_scancode.h>
 #include <random>
 using namespace VMath;
 
