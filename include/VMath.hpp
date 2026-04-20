@@ -3,32 +3,37 @@
 #include <cmath>
 
 namespace VMath {
-//Constants
-    inline constexpr float PI      = 3.1415926535f;
-    inline constexpr float TWO_PI  = 6.2831853071f;
-    inline constexpr float HALF_PI = 1.5707963267f;
-    inline constexpr float INV_PI  = 0.3183098861f;
-    inline constexpr float DEG2RAD = PI / 180.0f;
-    inline constexpr float RAD2DEG = 180.0f / PI;
-    inline constexpr float EPSILON = 0.000001f;
+/* Constants */
+
+    inline constexpr float PI          = 3.1415926535f;
+    inline constexpr float TWO_PI      = 6.2831853071f;
+    inline constexpr float HALF_PI     = 1.5707963267f;
+    inline constexpr float INV_PI      = 0.3183098861f;
+    inline constexpr float INV_HALF_PI = 0.6366197724f;
+    inline constexpr float INV_TWO_PI  = 0.1591549431f;
+    inline constexpr float DEG2RAD     = 0.0174532925f;
+    inline constexpr float RAD2DEG     = 57.295779513f;
+    inline constexpr float EPSILON     = 0.000001f;
     inline constexpr float DtoR(float D) { return D * DEG2RAD; }
     inline constexpr float RtoD(float R) { return R * RAD2DEG; }
-    /*Functions*/
 
-        // returns value clamped between min and max
-        inline float clamp(float value, float min, float max) { return fmax(min, fmin(value, max)); }
-        // returns value clamped between 0 and 1
-        inline float clamp01(float value) { return fmax(0, fmin(value, 1)); }
-        // returns true if value is within EPSILON of zero
-        inline bool IsZero(float a) { return std::abs(a) < EPSILON; }
-        // returns true if the difference between a and b is less than EPSILON
-        inline bool IsEqual(float a, float b) { return std::abs(a - b) < EPSILON; }
-        // returns a value linearly interpolated between a and b by a coefficient t
-        inline float Lerp(float a, float b, float t) { return a * (1 - t) + b * t; }
-        // returns the interpolation coefficient of a value within the range [a, b]
-        inline float InverseLerp(float a, float b, float value) { if (IsZero(b - a)) return 0; return (value - a) / (b - a); }
-        // maps a value from the input range [a1, b1] to the output range [a2, b2]
-        inline float MapRange(float a1, float b1, float a2, float b2, float value) { return Lerp(a2, b2, InverseLerp(a1, b1, value)); }
+/*Functions*/
+
+    // returns value clamped between min and max
+    inline float clamp(float value, float min, float max) { return fmax(min, fmin(value, max)); }
+    // returns value clamped between 0 and 1
+    inline float clamp01(float value) { return fmax(0, fmin(value, 1)); }
+    // returns true if value is within EPSILON of zero
+    inline bool IsZero(float a) { return std::abs(a) < EPSILON; }
+    // returns true if the difference between a and b is less than EPSILON
+    inline bool IsEqual(float a, float b) { return std::abs(a - b) < EPSILON; }
+    // returns a value linearly interpolated between a and b by a coefficient t
+    inline float Lerp(float a, float b, float t) { return a * (1 - t) + b * t; }
+    // returns the interpolation coefficient of a value within the range [a, b]
+    inline float InverseLerp(float a, float b, float value) { if (IsZero(b - a)) return 0; return (value - a) / (b - a); }
+    // maps a value from the input range [a1, b1] to the output range [a2, b2]
+    inline float MapRange(float a1, float b1, float a2, float b2, float value) { return Lerp(a2, b2, InverseLerp(a1, b1, value)); }
+
 //Two float
     class Vec2 {
         public:
